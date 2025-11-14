@@ -1,13 +1,14 @@
 BIN := bin/tribetrackerserver
 DATA := pb_data
 GO := go
-MAIN := main.go
-SERVE := serve
+LINT := golangci-lint
+MAIN := cmd/main.go
+command := serve
 
 all: run
 
 run:
-	$(GO) run $(MAIN) $(SERVE)
+	$(GO) run $(MAIN) $(command)
 
 build:
 	$(GO) build -o $(BIN) $(MAIN)
@@ -15,4 +16,10 @@ build:
 clean:
 	rm -rf $(BIN) $(DATA)
 
-.PHONY: clean
+lint:
+	$(LINT) run ./...
+
+fmt:
+	$(GO) fmt ./...
+
+.PHONY: clean fmt lint
