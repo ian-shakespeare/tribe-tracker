@@ -1,6 +1,6 @@
 import { AppleMaps, GoogleMaps } from "expo-maps";
 import { Platform } from "react-native";
-import { ThemedText } from "./themed-text";
+import { ThemedText } from "@/src/components/themed-text";
 
 export function MapView() {
   if (Platform.OS === "ios") {

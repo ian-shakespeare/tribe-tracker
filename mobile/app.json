@@ -42,7 +42,13 @@
         }
       ],
       "expo-maps",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you select a profile picture."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
