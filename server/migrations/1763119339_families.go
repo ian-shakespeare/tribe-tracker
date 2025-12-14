@@ -19,6 +19,7 @@ func init() {
 
 		families.CreateRule = types.Pointer(`@request.auth.id != ""`)
 		families.ViewRule = types.Pointer(`@request.auth.id != "" && members.id ?= @request.auth.id`)
+		families.ListRule = types.Pointer(`@request.auth.id != "" && members.id ?= @request.auth.id`)
 		families.UpdateRule = types.Pointer(`@request.auth.id != "" && members.id ?= @request.auth.id`)
 
 		families.Fields.Add(&core.TextField{

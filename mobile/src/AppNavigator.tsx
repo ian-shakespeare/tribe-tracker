@@ -13,6 +13,7 @@ import {
 } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import SignInScreen from "./screens/SignInScreen";
+import NewFamilyScreen from "./screens/NewFamilyScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -46,10 +47,12 @@ function TabNavigator() {
   );
 }
 
+// TODO: rename "main" to "tabs"
 export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="signin" component={SignInScreen} />
+      <Stack.Screen name="newfamily" component={NewFamilyScreen} />
       <Stack.Screen name="main" component={TabNavigator} />
     </Stack.Navigator>
   );

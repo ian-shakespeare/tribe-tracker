@@ -1,9 +1,11 @@
 import { useNavigation } from "@react-navigation/native";
 import { Button, Input, Layout, Text, useTheme } from "@ui-kitten/components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "react-native";
 import SecureInput from "../components/SecureInput";
 import { pb } from "../lib";
+import * as SecureStore from "expo-secure-store";
+import { API_URL_KEY } from "../lib/constants";
 
 export default function SignInScreen() {
   const navigation = useNavigation();
@@ -17,8 +19,20 @@ export default function SignInScreen() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  useEffect(() => {
+    if (pb.baseURL) {
+      setApiUrl(pb.baseURL);
+    }
+  }, []);
+
   const handleSubmit = async () => {
     try {
+      if (pb.baseURL !== apiUrl) {
+        const url = new URL(apiUrl);
+        pb.baseURL = url.toString();
+        SecureStore.setItem(API_URL_KEY, url.toString());
+      }
+
       if (authMode == "register") {
         const data = {
           firstName: firstName.trim().toLowerCase(),
@@ -109,9 +123,9 @@ export default function SignInScreen() {
             ["sign-in", "Already have an account?", "Sign In."],
           ] as const
         ).map(
-          ([mode, prompt, label]) =>
+          ([mode, prompt, label], i) =>
             authMode !== mode && (
-              <View>
+              <View key={i}>
                 <Text style={{ textAlign: "center" }}>
                   {prompt + " "}
                   <Text
