@@ -3,12 +3,13 @@ import { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { pb } from "../lib";
+import * as Crypto from "expo-crypto";
 
 export default function NewFamilyScreen() {
   const [name, setName] = useState("");
 
   const handleSubmit = () => {
-    const code = ""; // TODO: import crypto and generate a code
+    const code = Crypto.randomUUID().replaceAll("-", "");
     pb.collection("families").create({
       name,
       code,

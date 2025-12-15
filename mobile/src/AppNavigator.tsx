@@ -47,13 +47,12 @@ function TabNavigator() {
   );
 }
 
-// TODO: rename "main" to "tabs"
 export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="signin" component={SignInScreen} />
       <Stack.Screen name="newfamily" component={NewFamilyScreen} />
-      <Stack.Screen name="main" component={TabNavigator} />
+      <Stack.Screen name="tabs" component={TabNavigator} />
     </Stack.Navigator>
   );
 }

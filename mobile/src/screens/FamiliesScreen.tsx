@@ -51,6 +51,14 @@ export default function FamiliesScreen() {
             <Button accessoryRight={PlusIcon} onPress={handleNewFamily} />
           </View>
         </View>
+        <Button
+          onPress={() => {
+            pb.authStore.clear();
+            navigation.navigate("signin" as never);
+          }}
+        >
+          Sign Out
+        </Button>
       </SafeAreaView>
     </Layout>
   );

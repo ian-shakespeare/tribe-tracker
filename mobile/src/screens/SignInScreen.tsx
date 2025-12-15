@@ -20,9 +20,15 @@ export default function SignInScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    if (pb.baseURL) {
-      setApiUrl(pb.baseURL);
+    if (pb.authStore.isValid) {
+      navigation.navigate("tabs" as never);
+      return;
     }
+
+    pb.collection("users")
+      .authRefresh()
+      .then(() => navigation.navigate("tabs" as never))
+      .catch(() => pb.baseURL && setApiUrl(pb.baseURL));
   }, []);
 
   const handleSubmit = async () => {
@@ -47,7 +53,7 @@ export default function SignInScreen() {
       }
 
       await pb.collection("users").authWithPassword(email, password);
-      navigation.navigate("main" as never);
+      navigation.navigate("tabs" as never);
     } catch (e) {
       if (e instanceof Error) {
         // TODO: toast this
