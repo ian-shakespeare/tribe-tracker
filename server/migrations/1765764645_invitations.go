@@ -22,10 +22,10 @@ func init() {
 
 		invitations := core.NewBaseCollection(InvitationsId)
 
-		families.CreateRule = types.Pointer(`@request.auth.id != ""`)
-		families.ViewRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
-		families.ListRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
-		families.UpdateRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
+		invitations.CreateRule = types.Pointer(`@request.auth.id != ""`)
+		invitations.ViewRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
+		invitations.ListRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
+		invitations.UpdateRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
 
 		invitations.Fields.Add(&core.RelationField{
 			Name:         "sender",
@@ -67,7 +67,7 @@ func init() {
 		invitations.AddIndex("idx_invitation_sender", false, "sender", "")
 		invitations.AddIndex("idx_invitation_recipient", false, "recipient", "")
 
-		return nil
+		return app.Save(invitations)
 	}, func(app core.App) error {
 		invitations, err := app.FindCollectionByNameOrId(InvitationsId)
 		if err != nil {

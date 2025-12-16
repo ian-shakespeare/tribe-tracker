@@ -6,17 +6,27 @@ import {
   IconProps,
 } from "@ui-kitten/components";
 import MapScreen from "./screens/MapScreen";
-import FamiliesScreen from "./screens/FamiliesScreen";
 import {
   BottomTabBarProps,
   createBottomTabNavigator,
 } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import SignInScreen from "./screens/SignInScreen";
-import NewFamilyScreen from "./screens/NewFamilyScreen";
+import FamilyNewScreen from "./screens/FamilyNewScreen";
+import FamilyListScreen from "./screens/FamilyListScreen";
+import FamilyDetailScreen from "./screens/FamilyDetailScreen";
 
-const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
+export type StackParamList = {
+  map: undefined;
+  familylist: undefined;
+  signin: undefined;
+  familynew: undefined;
+  familydetail: { familyId: string };
+  tabs: undefined;
+};
+
+const Tab = createBottomTabNavigator<StackParamList>();
+const Stack = createNativeStackNavigator<StackParamList>();
 
 function MapIcon(props: IconProps): IconElement {
   return <Icon {...props} name="map-outline" />;
@@ -42,7 +52,7 @@ function TabNavigator() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={BottomTabBar}>
       <Tab.Screen name="map" component={MapScreen} />
-      <Tab.Screen name="families" component={FamiliesScreen} />
+      <Tab.Screen name="familylist" component={FamilyListScreen} />
     </Tab.Navigator>
   );
 }
@@ -51,7 +61,8 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="signin" component={SignInScreen} />
-      <Stack.Screen name="newfamily" component={NewFamilyScreen} />
+      <Stack.Screen name="familynew" component={FamilyNewScreen} />
+      <Stack.Screen name="familydetail" component={FamilyDetailScreen} />
       <Stack.Screen name="tabs" component={TabNavigator} />
     </Stack.Navigator>
   );
