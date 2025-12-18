@@ -9,12 +9,14 @@ import {
 } from "@ui-kitten/components";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Family, Invitation } from "../lib/models";
+import { Family, FamilyMember, Invitation } from "../lib/models";
 import { pb } from "../lib";
 import { formatDate, toTitleCase } from "../lib/strings";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
+import * as SecureStore from "expo-secure-store";
+import { SELECTED_FAMILY_KEY } from "../lib/constants";
 
 type FamilyDetailScreenProps = NativeStackScreenProps<
   StackParamList,
@@ -27,39 +29,40 @@ export default function FamilyDetailScreen({
 }: FamilyDetailScreenProps) {
   const theme = useTheme();
   const [family, setFamily] = useState<Family | null>(null);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
   const [joinedAt, setJoinedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     const familyId = route.params.familyId;
-
-    pb.collection<Family>("families")
-      .getOne(String(familyId))
-      .then(setFamily)
-      .catch((e: Error) => console.error(e.name + ": " + e.message)); // TODO: toast this
-  }, []);
-
-  useEffect(() => {
     const user = pb.authStore.record?.id;
+
     if (!user) {
       // TODO: toast
       return;
     }
 
-    if (!family) {
-      // TODO: toast
-      return;
-    }
+    pb.collection<Family>("families")
+      .getOne(String(familyId))
+      .then((f) => {
+        setFamily(f);
 
-    if (family.createdBy === user) {
-      setJoinedAt(new Date(family.createdAt));
-      return;
-    }
-
-    pb.collection<Invitation>("invitations")
-      .getFirstListItem(`recipient="${user}" && family="${family.id}"`)
-      .then(({ updatedAt }) => setJoinedAt(new Date(updatedAt)))
-      .catch(console.error); // TODO: toast
-  }, [family]);
+        return Promise.all([
+          f.createdBy === user
+            ? Promise.resolve({ updatedAt: f.createdAt })
+            : pb
+                .collection<Invitation>("invitations")
+                .getFirstListItem(`recipient="${user}" && family="${f.id}"`),
+          pb.send<FamilyMember[]>(`/mobile/families/${f.id}/members`, {
+            method: "GET",
+          }),
+        ]);
+      })
+      .then(([{ updatedAt }, items]) => {
+        setJoinedAt(new Date(updatedAt));
+        setMembers(items);
+      })
+      .catch((e: Error) => console.error(e.name + ": " + e.message)); // TODO: toast this
+  }, []);
 
   const renderMenuActions = () => {
     return (
@@ -84,6 +87,17 @@ export default function FamilyDetailScreen({
       <Layout style={{ flex: 1 }}>
         <Text>{JSON.stringify(family)}</Text>
         {!!joinedAt && <Text>Joined {formatDate(joinedAt)}</Text>}
+        <Text>Members ({members.length})</Text>
+        {members.map(({ firstName, lastName }) => (
+          <Text>
+            {firstName} {lastName}
+          </Text>
+        ))}
+        <Button
+          onPress={() => SecureStore.setItem(SELECTED_FAMILY_KEY, family!.id)}
+        >
+          Select
+        </Button>
         <Button
           onPress={() => {
             pb.authStore.clear();

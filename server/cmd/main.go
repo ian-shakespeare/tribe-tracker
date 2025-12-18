@@ -21,6 +21,28 @@ type UserLocation struct {
 	RecordedAt types.DateTime `db:"recordedAt" json:"recordedAt"`
 }
 
+type FamilyMember struct {
+	ID        string         `db:"id" json:"id"`
+	Email     string         `db:"email" json:"email"`
+	FirstName string         `db:"firstName" json:"firstName"`
+	LastName  string         `db:"lastName" json:"lastName"`
+	JoinedAt  types.DateTime `db:"joinedAt" json:"joinedAt"`
+}
+
+type MemberLocation struct {
+	UserID      string         `db:"userId" json:"userId"`
+	FirstName   string         `db:"firstName" json:"firstName"`
+	LastName    string         `db:"lastName" json:"lastName"`
+	Coordinates types.GeoPoint `db:"coordinates" json:"coordinates"`
+	RecordedAt  types.DateTime `db:"recordedAt" json:"recordedAt"`
+}
+
+/*
+TODO:
+- remove list rules for collections that are exclusively accessed through custom endpoints
+- double check indexes have been made where needed
+*/
+
 func main() {
 	app := pocketbase.New()
 
@@ -29,7 +51,7 @@ func main() {
 	})
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-		se.Router.GET("/displays/families/{code}", func(e *core.RequestEvent) error {
+		se.Router.GET("/display/families/{code}", func(e *core.RequestEvent) error {
 			code := e.Request.PathValue("code")
 
 			query := `
@@ -54,6 +76,78 @@ func main() {
 			}
 
 			return e.JSON(http.StatusOK, ul)
+		})
+
+		se.Router.GET("/mobile/families/{familyId}/members", func(e *core.RequestEvent) error {
+			familyId := e.Request.PathValue("familyId")
+			userId := e.Auth.Id
+
+			query := `
+      select u.id as id,
+        u.email as email,
+        u.firstName as firstName,
+        u.lastName as lastName,
+        ifnull(i.updatedAt, f.createdAt) as joinedAt
+      from families f
+      join json_each(f.members) members
+      join users u
+        on members.value = u.id
+      left join invitations i
+        on u.id = i.recipient
+        and i.accepted = 1
+      where f.id = {:familyId}
+        and exists (
+          select 1
+          from json_each(f.members) m
+          where m.value = {:userId}
+        )
+      `
+
+			var fm []FamilyMember
+
+			err := app.DB().NewQuery(query).Bind(dbx.Params{"familyId": familyId, "userId": userId}).All(&fm)
+			if err != nil {
+				message := "Failed to get family members."
+				return e.String(http.StatusInternalServerError, message)
+			}
+
+			return e.JSON(http.StatusOK, fm)
+		})
+
+		se.Router.GET("/mobile/families/{familyId}/members/locations", func(e *core.RequestEvent) error {
+			familyId := e.Request.PathValue("familyId")
+			userId := e.Auth.Id
+
+			query := `
+      select u.id as userId,
+        u.firstName as firstName,
+        u.lastName as lastName,
+        l.coordinates as coordinates,
+        max(l.createdAt) as recordedAt
+      from families f
+      join json_each(f.members) members
+      join users u
+        on members.value = u.id
+      join locations l
+        on u.id = l.user
+      where f.id = {:familyId}
+        and exists (
+          select 1
+          from json_each(f.members) m
+          where m.value = {:userId}
+        )
+      group by u.id
+      `
+
+			var ml []MemberLocation
+
+			err := app.DB().NewQuery(query).Bind(dbx.Params{"familyId": familyId, "userId": userId}).All(&ml)
+			if err != nil {
+				message := "Failed to get member locations."
+				return e.String(http.StatusInternalServerError, message)
+			}
+
+			return e.JSON(http.StatusOK, ml)
 		})
 
 		return se.Next()
