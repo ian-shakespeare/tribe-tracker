@@ -9,14 +9,14 @@ import {
 } from "@ui-kitten/components";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Family, FamilyMember, Invitation } from "../lib/models";
-import { pb } from "../lib";
+import { FamilyDetails } from "../lib/models";
+import { getFamilyDetails, signOut } from "../lib";
 import { formatDate, toTitleCase } from "../lib/strings";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
-import * as SecureStore from "expo-secure-store";
-import { SELECTED_FAMILY_KEY } from "../lib/constants";
+import { useToast } from "../contexts/Toast";
+import { useLocations } from "../contexts/Locations";
 
 type FamilyDetailScreenProps = NativeStackScreenProps<
   StackParamList,
@@ -28,40 +28,17 @@ export default function FamilyDetailScreen({
   route,
 }: FamilyDetailScreenProps) {
   const theme = useTheme();
-  const [family, setFamily] = useState<Family | null>(null);
-  const [members, setMembers] = useState<FamilyMember[]>([]);
-  const [joinedAt, setJoinedAt] = useState<Date | null>(null);
+  const toast = useToast();
+  const locations = useLocations();
+  const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(
+    null,
+  );
 
   useEffect(() => {
     const familyId = route.params.familyId;
-    const user = pb.authStore.record?.id;
-
-    if (!user) {
-      // TODO: toast
-      return;
-    }
-
-    pb.collection<Family>("families")
-      .getOne(String(familyId))
-      .then((f) => {
-        setFamily(f);
-
-        return Promise.all([
-          f.createdBy === user
-            ? Promise.resolve({ updatedAt: f.createdAt })
-            : pb
-                .collection<Invitation>("invitations")
-                .getFirstListItem(`recipient="${user}" && family="${f.id}"`),
-          pb.send<FamilyMember[]>(`/mobile/families/${f.id}/members`, {
-            method: "GET",
-          }),
-        ]);
-      })
-      .then(([{ updatedAt }, items]) => {
-        setJoinedAt(new Date(updatedAt));
-        setMembers(items);
-      })
-      .catch((e: Error) => console.error(e.name + ": " + e.message)); // TODO: toast this
+    getFamilyDetails(familyId)
+      .then(setFamilyDetails)
+      .catch((e: Error) => toast.error(e.message));
   }, []);
 
   const renderMenuActions = () => {
@@ -79,28 +56,30 @@ export default function FamilyDetailScreen({
       style={{ flex: 1, backgroundColor: theme["background-basic-color-1"] }}
     >
       <TopNavigation
-        title={toTitleCase(family?.name ?? "Family Detail")}
+        title={toTitleCase(familyDetails?.name ?? "Family Detail")}
         alignment="center"
         accessoryLeft={renderMenuActions}
       />
       <Divider />
       <Layout style={{ flex: 1 }}>
-        <Text>{JSON.stringify(family)}</Text>
-        {!!joinedAt && <Text>Joined {formatDate(joinedAt)}</Text>}
-        <Text>Members ({members.length})</Text>
-        {members.map(({ firstName, lastName }) => (
+        <Text>{JSON.stringify(familyDetails)}</Text>
+        {!!familyDetails?.joinedAt && (
+          <Text>Joined {formatDate(new Date(familyDetails.joinedAt))}</Text>
+        )}
+        <Text>Members ({familyDetails?.members.length})</Text>
+        {familyDetails?.members.map(({ firstName, lastName }) => (
           <Text>
             {firstName} {lastName}
           </Text>
         ))}
-        <Button
-          onPress={() => SecureStore.setItem(SELECTED_FAMILY_KEY, family!.id)}
-        >
-          Select
-        </Button>
+        {!!familyDetails && (
+          <Button onPress={() => locations.setFamilyId(familyDetails.id)}>
+            Select
+          </Button>
+        )}
         <Button
           onPress={() => {
-            pb.authStore.clear();
+            signOut();
             navigation.navigate("signin");
           }}
         >

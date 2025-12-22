@@ -26,6 +26,7 @@ func init() {
 		invitations.ViewRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
 		invitations.ListRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
 		invitations.UpdateRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
+		invitations.DeleteRule = types.Pointer(`@request.auth.id != "" && (sender.id = @request.auth.id || recipient.id = @request.auth.id)`)
 
 		invitations.Fields.Add(&core.RelationField{
 			Name:         "sender",

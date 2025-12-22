@@ -7,6 +7,12 @@ export type User = {
   updated: string;
 };
 
+export type NewUser = Omit<User, "id" | "created" | "updated"> & {
+  password: string;
+  passwordConfirm: string;
+  emailVisibility: boolean;
+};
+
 export type Family = {
   id: string;
   name: string;
@@ -14,6 +20,13 @@ export type Family = {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type NewFamily = Omit<
+  Family,
+  "id" | "createdBy" | "createdAt" | "updatedAt"
+> & {
+  code: string;
 };
 
 export type FamilyMember = Pick<
@@ -38,10 +51,15 @@ export type Coordinates = {
   lon: number;
 };
 
-export type MemberLocations = {
+export type MemberLocation = {
   userId: string;
   firstName: string;
   lastName: string;
   coordinates: Coordinates;
   recordedAt: string;
+};
+
+export type FamilyDetails = Omit<Family, "members"> & {
+  members: FamilyMember[];
+  joinedAt: string;
 };

@@ -10,37 +10,26 @@ import {
 import { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { pb } from "../lib";
+import { createFamily } from "../lib";
 import * as Crypto from "expo-crypto";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
+import { useToast } from "../contexts/Toast";
 
 type FamilyNewScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
 
 export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
   const theme = useTheme();
+  const toast = useToast();
   const [name, setName] = useState("");
 
   const handleSubmit = () => {
     const code = Crypto.randomUUID().replaceAll("-", "");
-    const user = pb.authStore.record?.id;
 
-    if (!user) {
-      // TODO: toast this bitch
-      console.error("no user??");
-      return;
-    }
-
-    pb.collection("families")
-      .create({
-        name,
-        code,
-        createdBy: user,
-        members: user,
-      })
+    createFamily({ name, code, members: [] })
       .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
-      .catch(console.error); // TODO: toast
+      .catch((e: Error) => toast.error(e.message));
   };
 
   const renderMenuActions = () => {

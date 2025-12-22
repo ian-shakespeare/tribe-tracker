@@ -19,7 +19,7 @@ func init() {
 
 		locations.CreateRule = types.Pointer(`@request.auth.id != ""`)
 		locations.ViewRule = types.Pointer(`@request.auth.id != "" && user.id = @request.auth.id`)
-		locations.ListRule = types.Pointer(`@request.auth.id != "" && @collection.families:relatives.members.id ?= @request.auth.id && @collection.families:relatives.members.id ?= user.id`)
+		locations.ListRule = types.Pointer(`@request.auth.id != "" && user.id = @request.auth.id`)
 
 		locations.Fields.Add(&core.RelationField{
 			Name:          "user",

@@ -1,14 +1,21 @@
-import { useNavigation } from "@react-navigation/native";
 import { Button, Input, Layout, Text, useTheme } from "@ui-kitten/components";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 import SecureInput from "../components/SecureInput";
-import { pb } from "../lib";
-import * as SecureStore from "expo-secure-store";
-import { API_URL_KEY } from "../lib/constants";
+import {
+  getBaseUrl,
+  isSignedIn,
+  refreshAuth,
+  createUser,
+  saveBaseUrl,
+  signIn,
+} from "../lib";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { StackParamList } from "../AppNavigator";
 
-export default function SignInScreen() {
-  const navigation = useNavigation();
+type SignInScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
+
+export default function SignInScreen({ navigation }: SignInScreenProps) {
   const theme = useTheme();
 
   const [authMode, setAuthMode] = useState<"sign-in" | "register">("sign-in");
@@ -20,23 +27,24 @@ export default function SignInScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    if (pb.authStore.isValid) {
+    if (isSignedIn()) {
       navigation.navigate("tabs" as never);
       return;
     }
 
-    pb.collection("users")
-      .authRefresh()
+    refreshAuth()
       .then(() => navigation.navigate("tabs" as never))
-      .catch(() => pb.baseURL && setApiUrl(pb.baseURL));
+      .catch(() => {
+        const baseUrl = getBaseUrl();
+        setApiUrl(baseUrl);
+      });
   }, []);
 
   const handleSubmit = async () => {
     try {
-      if (pb.baseURL !== apiUrl) {
+      if (getBaseUrl() !== apiUrl) {
         const url = new URL(apiUrl);
-        pb.baseURL = url.toString();
-        SecureStore.setItem(API_URL_KEY, url.toString());
+        saveBaseUrl(url);
       }
 
       if (authMode == "register") {
@@ -48,15 +56,13 @@ export default function SignInScreen() {
           passwordConfirm: confirmPassword.trim(),
           emailVisibility: true,
         };
-        await pb.collection("users").create(data);
-        await pb.collection("users").authWithPassword(email, password);
+        await createUser(data);
       }
 
-      await pb.collection("users").authWithPassword(email, password);
-      navigation.navigate("tabs" as never);
+      await signIn(email.trim().toLowerCase(), password);
+      navigation.navigate("tabs");
     } catch (e) {
       if (e instanceof Error) {
-        // TODO: toast this
         console.error(e.message);
       }
     }

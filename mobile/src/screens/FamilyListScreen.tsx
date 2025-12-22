@@ -14,12 +14,13 @@ import {
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Family } from "../lib/models";
-import { pb } from "../lib";
+import { getFamilies } from "../lib";
 import { toTitleCase } from "../lib/strings";
 import PlusIcon from "../components/PlusIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { View } from "react-native";
+import { useToast } from "../contexts/Toast";
 
 type ListItemProps = {
   item: Family;
@@ -35,14 +36,13 @@ export default function FamilyListScreen({
   navigation,
 }: FamilyListScreenProps) {
   const theme = useTheme();
+  const toast = useToast();
   const [families, setFamilies] = useState<Family[]>([]);
 
   useEffect(() => {
-    // TODO: actually support pagination
-    pb.collection<Family>("families")
-      .getList()
-      .then(({ items }) => setFamilies(items))
-      .catch((e: Error) => console.error(e.name + ": " + e.message)); // TODO: toast this
+    getFamilies()
+      .then(setFamilies)
+      .catch((e: Error) => toast.error(e.message));
   }, [navigation]);
 
   const renderIcon = (props: IconProps) => (
@@ -84,6 +84,9 @@ export default function FamilyListScreen({
             <Text>You don't have a family, jack ass</Text>
             <Button onPress={() => navigation.navigate("familynew")}>
               Create One
+            </Button>
+            <Button onPress={() => toast.error("here is a toast.")}>
+              Toast
             </Button>
           </View>
         ) : (

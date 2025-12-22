@@ -37,12 +37,6 @@ type MemberLocation struct {
 	RecordedAt  types.DateTime `db:"recordedAt" json:"recordedAt"`
 }
 
-/*
-TODO:
-- remove list rules for collections that are exclusively accessed through custom endpoints
-- double check indexes have been made where needed
-*/
-
 func main() {
 	app := pocketbase.New()
 
