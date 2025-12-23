@@ -1,4 +1,5 @@
 import * as SecureStore from "expo-secure-store";
+import * as Crypto from "expo-crypto";
 import PocketBase, { AsyncAuthStore } from "pocketbase";
 import { API_URL_KEY } from "./constants";
 import {
@@ -7,7 +8,6 @@ import {
   FamilyMember,
   Invitation,
   MemberLocation,
-  NewFamily,
   NewUser,
   User,
 } from "./models";
@@ -54,14 +54,17 @@ export function saveBaseUrl(url: URL) {
   SecureStore.setItem(API_URL_KEY, url.toString());
 }
 
-export async function createFamily(family: NewFamily): Promise<Family> {
+export async function createFamily(name: string): Promise<Family> {
   const user = pb.authStore.record?.id;
-
   if (!user) {
     throw new Error("Not authorized.");
   }
 
-  return await pb.collection<Family>("families").create(family);
+  const code = Crypto.randomUUID().replaceAll("-", "");
+
+  return await pb
+    .collection<Family>("families")
+    .create({ name, code, createdBy: user, members: [user] });
 }
 
 export async function getFamilies(): Promise<Family[]> {
