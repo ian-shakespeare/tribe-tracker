@@ -72,7 +72,7 @@ export default function FamilyListScreen({
     <SafeAreaView
       edges={["top"]}
       style={[
-        styles.screen,
+        styles.safeArea,
         { backgroundColor: theme["background-basic-color-1"] },
       ]}
     >
@@ -82,16 +82,16 @@ export default function FamilyListScreen({
         accessoryRight={renderMenuActions}
       />
       <Divider />
-      <Layout style={styles.screen}>
+      <Layout style={styles.layout}>
         {families.length < 1 ? (
-          <View style={styles.textContainer}>
+          <View style={styles.container}>
             <Text category="h6" style={styles.text}>
               You don't have a family yet.{"\n"}But you can{" "}
               <Text
                 category="h6"
                 onPress={() => navigation.navigate("familynew")}
                 style={[
-                  styles.selectableText,
+                  styles.highlight,
                   {
                     color: theme["text-primary-color"],
                   },
@@ -114,10 +114,13 @@ export default function FamilyListScreen({
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  safeArea: {
     flex: 1,
   },
-  textContainer: {
+  layout: {
+    flex: 1,
+  },
+  container: {
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
   },
-  selectableText: {
+  highlight: {
     textDecorationLine: "underline",
   },
 });
