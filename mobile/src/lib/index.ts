@@ -105,3 +105,34 @@ export async function getUserLocations(
 
   return locations;
 }
+
+export async function getUsers(ids: string[]): Promise<User[]> {
+  const filter = ids.map((id) => `id = "${id}"`).join(" || ");
+  const users = await pb.collection<User>("users").getList(0, 100, { filter });
+  return users.items;
+}
+
+export async function getPendingInvitations(
+  familyId: string,
+): Promise<Invitation[]> {
+  const invitations = await pb
+    .collection<Invitation>("invitations")
+    .getList(0, 100, { filter: `accepted=false && family="${familyId}"` });
+  return invitations.items;
+}
+
+export async function createInvitation(
+  familyId: string,
+  email: string,
+): Promise<Invitation> {
+  const sender = pb.authStore.record?.id;
+  if (!sender) throw new Error("Not authorized.");
+
+  const { id: recipient } = await pb
+    .collection<User>("users")
+    .getFirstListItem(`email="${email}"`);
+
+  return await pb
+    .collection<Invitation>("invitations")
+    .create({ sender, recipient, family: familyId });
+}
