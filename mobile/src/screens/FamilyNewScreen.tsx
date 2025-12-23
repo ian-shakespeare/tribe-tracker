@@ -11,7 +11,6 @@ import { useState } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createFamily } from "../lib";
-import * as Crypto from "expo-crypto";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
@@ -25,11 +24,12 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
   const [name, setName] = useState("");
 
   const handleSubmit = () => {
-    const code = Crypto.randomUUID().replaceAll("-", "");
-
-    createFamily({ name, code, members: [] })
+    createFamily(name)
       .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
-      .catch((e: Error) => toast.error(e.message));
+      .catch((e: Error) => {
+        console.error(e);
+        toast.error(e.message);
+      });
   };
 
   const renderMenuActions = () => {
