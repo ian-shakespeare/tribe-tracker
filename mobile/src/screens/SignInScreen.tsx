@@ -13,7 +13,7 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 
-type SignInScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
+type SignInScreenProps = NativeStackScreenProps<StackParamList, "signin">;
 
 export default function SignInScreen({ navigation }: SignInScreenProps) {
   const theme = useTheme();

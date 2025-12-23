@@ -1,22 +1,30 @@
 import {
-  Button,
   Divider,
   Layout,
+  List,
+  ListItem,
   Text,
   TopNavigation,
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FamilyDetails } from "../lib/models";
-import { getFamilyDetails, signOut } from "../lib";
+import { FamilyDetails, FamilyMember } from "../lib/models";
+import { getFamilyDetails } from "../lib";
 import { formatDate, toTitleCase } from "../lib/strings";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
-import { useLocations } from "../contexts/Locations";
+import { StyleSheet, View } from "react-native";
+import InviteIcon from "../components/InviteIcon";
+import { useFocusEffect } from "@react-navigation/native";
+
+type ListItemProps = {
+  item: FamilyMember;
+  index: number;
+};
 
 type FamilyDetailScreenProps = NativeStackScreenProps<
   StackParamList,
@@ -29,63 +37,94 @@ export default function FamilyDetailScreen({
 }: FamilyDetailScreenProps) {
   const theme = useTheme();
   const toast = useToast();
-  const locations = useLocations();
   const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(
     null,
   );
 
-  useEffect(() => {
-    const familyId = route.params.familyId;
-    getFamilyDetails(familyId)
-      .then(setFamilyDetails)
-      .catch((e: Error) => toast.error(e.message));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const familyId = route.params.familyId;
+      getFamilyDetails(familyId)
+        .then(setFamilyDetails)
+        .catch((e: Error) => toast.error(e.message));
+    }, [route, setFamilyDetails, toast]),
+  );
 
-  const renderMenuActions = () => {
-    return (
-      <TopNavigationAction
-        icon={BackArrowIcon}
-        onPress={() => navigation.pop()}
-      />
-    );
-  };
+  const renderListItem = ({ item }: ListItemProps) => (
+    <ListItem
+      title={toTitleCase(`${item.firstName} ${item.lastName}`)}
+      description={`Joined ${formatDate(new Date(item.joinedAt))}`}
+      style={styles.listItem}
+    />
+  );
+
+  const renderBackAction = () => (
+    <TopNavigationAction
+      icon={BackArrowIcon}
+      onPress={() => navigation.pop()}
+    />
+  );
+
+  const renderInviteAction = () => (
+    <TopNavigationAction
+      icon={InviteIcon}
+      onPress={() =>
+        navigation.navigate("familyinvite", {
+          familyId: route.params.familyId,
+        })
+      }
+    />
+  );
+
+  const renderEmpty = () => (
+    <View style={styles.emptyContainer}>
+      <Text category="p1" appearance="hint" style={styles.emptyText}>
+        Loading...
+      </Text>
+    </View>
+  );
 
   return (
     <SafeAreaView
       edges={["top"]}
-      style={{ flex: 1, backgroundColor: theme["background-basic-color-1"] }}
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme["background-basic-color-1"] },
+      ]}
     >
       <TopNavigation
         title={toTitleCase(familyDetails?.name ?? "Family Detail")}
         alignment="center"
-        accessoryLeft={renderMenuActions}
+        accessoryLeft={renderBackAction}
+        accessoryRight={renderInviteAction}
       />
       <Divider />
-      <Layout style={{ flex: 1 }}>
-        <Text>{JSON.stringify(familyDetails)}</Text>
-        {!!familyDetails?.joinedAt && (
-          <Text>Joined {formatDate(new Date(familyDetails.joinedAt))}</Text>
-        )}
-        <Text>Members ({familyDetails?.members.length})</Text>
-        {familyDetails?.members.map(({ firstName, lastName }) => (
-          <Text>
-            {firstName} {lastName}
-          </Text>
-        ))}
-        {!!familyDetails && (
-          <Button onPress={() => locations.setFamilyId(familyDetails.id)}>
-            Select
-          </Button>
-        )}
-        <Button
-          onPress={() => {
-            signOut();
-            navigation.navigate("signin");
-          }}
-        >
-          Sign Out
-        </Button>
+      <Layout style={styles.layout}>
+        <List
+          data={familyDetails?.members ?? []}
+          renderItem={renderListItem}
+          ListEmptyComponent={renderEmpty}
+        />
       </Layout>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  layout: {
+    flex: 1,
+  },
+  listItem: {
+    paddingHorizontal: 16,
+  },
+  emptyContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  emptyText: {
+    textAlign: "center",
+  },
+});
