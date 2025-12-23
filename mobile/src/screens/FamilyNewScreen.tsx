@@ -3,12 +3,13 @@ import {
   Divider,
   Input,
   Layout,
+  Text,
   TopNavigation,
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useState } from "react";
-import { View } from "react-native";
+import { useCallback, useState } from "react";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { createFamily } from "../lib";
 import BackArrowIcon from "../components/BackArrowIcon";
@@ -23,27 +24,30 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
   const toast = useToast();
   const [name, setName] = useState("");
 
-  const handleSubmit = () => {
-    createFamily(name)
-      .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
-      .catch((e: Error) => {
-        console.error(e);
-        toast.error(e.message);
-      });
-  };
+  const handleSubmit = useCallback(
+    () =>
+      createFamily(name)
+        .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
+        .catch((e: Error) => toast.error(e.message)),
+    [name, navigation, toast],
+  );
 
-  const renderMenuActions = () => {
-    return (
+  const renderMenuActions = useCallback(
+    () => (
       <TopNavigationAction
         icon={BackArrowIcon}
         onPress={() => navigation.pop()}
       />
-    );
-  };
+    ),
+    [navigation],
+  );
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme["background-basic-color-1"] }}
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme["background-basic-color-1"] },
+      ]}
     >
       <TopNavigation
         title="New Family"
@@ -51,12 +55,39 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
         accessoryLeft={renderMenuActions}
       />
       <Divider />
-      <Layout style={{ flex: 1, paddingHorizontal: 16 }}>
-        <View style={{ flex: 1 }}>
-          <Input placeholder="Name" value={name} onChangeText={setName} />
+      <Layout style={styles.layout}>
+        <View style={styles.container}>
+          <View style={styles.input}>
+            <Input placeholder="Name" value={name} onChangeText={setName} />
+            <Text category="p2" appearance="hint" style={styles.text}>
+              Something like "Smiths", "Kevin's Cool Kids", etc.
+            </Text>
+          </View>
           <Button onPress={handleSubmit}>Create</Button>
         </View>
       </Layout>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  layout: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  container: {
+    flex: 1,
+    gap: 12,
+    justifyContent: "space-between",
+  },
+  input: {
+    gap: 4,
+  },
+  text: {
+    textAlign: "center",
+  },
+});
