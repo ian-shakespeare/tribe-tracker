@@ -10,7 +10,9 @@ import { MemberLocation } from "../lib/models";
 import { getUserLocations } from "../lib";
 import { useNetworkState } from "expo-network";
 
-const DELAY = 30_000;
+const SECOND = 1_000;
+const MINUTE = 60 * SECOND;
+const DELAY = 5 * MINUTE;
 
 const LocationsContext = createContext<{
   locations: MemberLocation[];
