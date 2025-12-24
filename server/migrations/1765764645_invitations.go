@@ -32,6 +32,7 @@ func init() {
 			Name:         "sender",
 			CollectionId: users.Id,
 			Required:     true,
+			MaxSelect:    1,
 		})
 
 		invitations.Fields.Add(&core.RelationField{
@@ -39,6 +40,7 @@ func init() {
 			CollectionId:  users.Id,
 			Required:      true,
 			CascadeDelete: true,
+			MaxSelect:     1,
 		})
 
 		invitations.Fields.Add(&core.RelationField{
@@ -46,6 +48,7 @@ func init() {
 			CollectionId:  families.Id,
 			Required:      true,
 			CascadeDelete: true,
+			MaxSelect:     1,
 		})
 
 		invitations.Fields.Add(&core.BoolField{

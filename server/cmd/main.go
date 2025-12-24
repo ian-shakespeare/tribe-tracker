@@ -37,6 +37,12 @@ type MemberLocation struct {
 	RecordedAt  types.DateTime `db:"recordedAt" json:"recordedAt"`
 }
 
+type FamilyInvitation struct {
+	InvitationID string         `db:"id" json:"id"`
+	FamilyName   string         `db:"familyName" json:"familyName"`
+	CreatedAt    types.DateTime `db:"createdAt" json:"createdAt"`
+}
+
 func main() {
 	app := pocketbase.New()
 
@@ -95,6 +101,7 @@ func main() {
           from json_each(f.members) m
           where m.value = {:userId}
         )
+      order by firstName
       `
 
 			var fm []FamilyMember
@@ -131,6 +138,7 @@ func main() {
           where m.value = {:userId}
         )
       group by u.id
+      order by recordedAt desc
       `
 
 			var ml []MemberLocation
@@ -142,6 +150,69 @@ func main() {
 			}
 
 			return e.JSON(http.StatusOK, ml)
+		})
+
+		se.Router.GET("/mobile/invitations", func(e *core.RequestEvent) error {
+			userId := e.Auth.Id
+
+			query := `
+      select i.id as id,
+        f.name as familyName,
+        i.createdAt as createdAt
+      from invitations i
+      join families f
+        on i.family = f.id
+      where i.recipient = 'pbtmbvboyb5rz1x'
+        and i.accepted = 0
+      order by createdAt desc
+      `
+
+			var fi []FamilyInvitation
+
+			err := app.DB().NewQuery(query).Bind(dbx.Params{"userId": userId}).All(&fi)
+			if err != nil {
+				message := "Failed to get family invitations."
+				return e.String(http.StatusInternalServerError, message)
+			}
+
+			return e.JSON(http.StatusOK, fi)
+		})
+
+		se.Router.PUT("/mobile/invitations/{invitationId}", func(e *core.RequestEvent) error {
+			invitationId := e.Request.PathValue("invitationId")
+			userId := e.Auth.Id
+
+			query := `
+      update invitations
+      set accepted = 1
+      where id = {:invitationId}
+      and recipient = {:userId}
+      returning family as familyId
+      `
+
+			var family struct {
+				FamilyId string `db:"familyId" json:"familyId"`
+			}
+
+			err := app.DB().NewQuery(query).Bind(dbx.Params{"invitationId": invitationId, "userId": userId}).One(&family)
+			if err != nil {
+				message := "Failed to accept family invite."
+				return e.String(http.StatusInternalServerError, message)
+			}
+
+			query = `
+      update families
+      set members = json_insert(members, '$[#]', {:userId})
+      where id = {:familyId}
+      `
+
+			_, err = app.DB().NewQuery(query).Bind(dbx.Params{"userId": userId, "familyId": family.FamilyId}).Execute()
+			if err != nil {
+				message := "Failed to join family."
+				return e.String(http.StatusInternalServerError, message)
+			}
+
+			return e.JSON(http.StatusOK, family)
 		})
 
 		return se.Next()
