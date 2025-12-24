@@ -14,6 +14,7 @@ import ProfileScreen from "./screens/ProfileScreen";
 import PeopleIcon from "./components/PeopleIcon";
 import PersonIcon from "./components/PersonIcon";
 import MapIcon from "./components/MapIcon";
+import InvitationListScreen from "./screens/InvitationListScreen";
 
 export type StackParamList = {
   map: undefined;
@@ -24,6 +25,7 @@ export type StackParamList = {
   familyinvite: { familyId: string };
   tabs: undefined;
   profile: undefined;
+  invitationlist: undefined;
 };
 
 const Tab = createBottomTabNavigator<StackParamList>();
@@ -36,9 +38,9 @@ function BottomTabBar({ navigation, state }: BottomTabBarProps) {
       onSelect={(index) => navigation.navigate(state.routeNames[index])}
       style={{ paddingBottom: 12 }}
     >
-      <BottomNavigationTab title="MAP" icon={MapIcon} />
-      <BottomNavigationTab title="FAMILIES" icon={PeopleIcon} />
-      <BottomNavigationTab title="PROFILE" icon={PersonIcon} />
+      <BottomNavigationTab title="Map" icon={MapIcon} />
+      <BottomNavigationTab title="Families" icon={PeopleIcon} />
+      <BottomNavigationTab title="Profile" icon={PersonIcon} />
     </BottomNavigation>
   );
 }
@@ -60,6 +62,7 @@ export default function AppNavigator() {
       <Stack.Screen name="familynew" component={FamilyNewScreen} />
       <Stack.Screen name="familydetail" component={FamilyDetailScreen} />
       <Stack.Screen name="familyinvite" component={FamilyInviteScreen} />
+      <Stack.Screen name="invitationlist" component={InvitationListScreen} />
       <Stack.Screen name="tabs" component={TabNavigator} />
     </Stack.Navigator>
   );

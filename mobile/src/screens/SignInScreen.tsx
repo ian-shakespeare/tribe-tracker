@@ -12,11 +12,13 @@ import {
 } from "../lib";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
+import { useToast } from "../contexts/Toast";
 
 type SignInScreenProps = NativeStackScreenProps<StackParamList, "signin">;
 
 export default function SignInScreen({ navigation }: SignInScreenProps) {
   const theme = useTheme();
+  const toast = useToast();
 
   const [authMode, setAuthMode] = useState<"sign-in" | "register">("sign-in");
   const [firstName, setFirstName] = useState("");
@@ -63,7 +65,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
       navigation.navigate("tabs");
     } catch (e) {
       if (e instanceof Error) {
-        console.error(e.message);
+        toast.danger(e.message);
       }
     }
   };

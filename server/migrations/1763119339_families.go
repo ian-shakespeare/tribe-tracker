@@ -40,6 +40,7 @@ func init() {
 		families.Fields.Add(&core.RelationField{
 			Name:         "createdBy",
 			CollectionId: users.Id,
+			MaxSelect:    1,
 		})
 
 		families.Fields.Add(&core.RelationField{

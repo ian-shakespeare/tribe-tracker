@@ -1,6 +1,7 @@
 export type User = {
   id: string;
   email: string;
+  avatar?: string;
   firstName: string;
   lastName: string;
   created: string;
@@ -62,4 +63,10 @@ export type MemberLocation = {
 export type FamilyDetails = Omit<Family, "members"> & {
   members: FamilyMember[];
   joinedAt: string;
+};
+
+export type FamilyInvitation = {
+  id: string;
+  familyName: string;
+  createdAt: string;
 };

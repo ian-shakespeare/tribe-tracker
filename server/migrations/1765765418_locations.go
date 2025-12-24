@@ -25,6 +25,7 @@ func init() {
 			Name:          "user",
 			CollectionId:  users.Id,
 			CascadeDelete: true,
+			MaxSelect:     1,
 		})
 
 		locations.Fields.Add(&core.GeoPointField{

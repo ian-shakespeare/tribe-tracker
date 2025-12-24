@@ -1,18 +1,17 @@
 import {
   createContext,
   ReactNode,
-  useCallback,
   useContext,
   useEffect,
   useState,
 } from "react";
-import { Card, Text, useTheme } from "@ui-kitten/components";
+import { Card, Text } from "@ui-kitten/components";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";
 
-const DELAY = 8_000;
+const DELAY = 5_000;
 
-type Mode = "info" | "warn" | "error";
+type Mode = "info" | "warn" | "danger";
 
 type Toast = {
   mode: Mode;
@@ -20,9 +19,9 @@ type Toast = {
 };
 
 const ToastContext = createContext<{
-  error: (message: string) => void;
+  danger: (message: string) => void;
 }>({
-  error: () => {
+  danger: () => {
     throw new Error("Uninitialized.");
   },
 });
@@ -35,39 +34,31 @@ type ToastProviderProps = {
 
 export const ToastProvider = ({ children }: ToastProviderProps) => {
   const { top } = useSafeAreaInsets();
-  const theme = useTheme();
   const [toast, setToast] = useState<Toast | null>(null);
 
-  const error = useCallback(
-    (message: string) => {
-      setToast({ mode: "error", message });
-    },
-    [setToast],
-  );
+  const danger = (message: string) => {
+    setToast({ mode: "danger", message });
+  };
 
   useEffect(() => {
     if (!toast) return;
 
-    const tmt = setTimeout(() => {
-      setToast(null);
-    }, DELAY);
+    const tmt = setTimeout(() => setToast(null), DELAY);
 
-    return () => clearTimeout(tmt);
-  }, [setToast]);
-
-  const value = {
-    error,
-  };
+    return () => {
+      clearTimeout(tmt);
+    };
+  }, [toast]);
 
   return (
-    <ToastContext.Provider value={value}>
+    <ToastContext.Provider value={{ danger }}>
       {!!toast && (
         <Card
           onPress={() => setToast(null)}
+          status={toast.mode}
           style={[
             styles.card,
             {
-              backgroundColor: theme["color-danger-500"],
               top,
             },
           ]}
