@@ -17,10 +17,10 @@ jobs:
 
     - name: Build Docker Image
       run: |
-        docker build -t ghcr.io/${{ github.actor }}/${{ github.repository_name }}:${{ github.ref_name }} \
-          -t ghcr.io/${{ github.actor }}/${{ github.repository_name }}:latest .
+        docker build -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} \
+          -t ghcr.io/${{ github.repository }}:latest .
 
     - name: Push Docker Image
       run: |
-        docker push ghcr.io/${{ github.actor }}/${{ github.repository_name }}:${{ github.ref_name }}
-        docker push ghcr.io/${{ github.actor }}/${{ github.repository_name }}:latest
+        docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
+        docker push ghcr.io/${{ github.repository }}:latest
