@@ -5,6 +5,7 @@ import { API_URL_KEY } from "./constants";
 import {
   Family,
   FamilyDetails,
+  FamilyInvitation,
   FamilyMember,
   Invitation,
   MemberLocation,
@@ -72,11 +73,17 @@ export async function getFamilies(): Promise<Family[]> {
   return results.items;
 }
 
+export async function getFamily(familyId: string): Promise<Family> {
+  const user = pb.authStore.record?.id;
+  if (!user) throw new Error("Not authorized.");
+
+  return await pb.collection<Family>("families").getOne(familyId);
+}
+
 export async function getFamilyDetails(
   familyId: string,
 ): Promise<FamilyDetails> {
   const user = pb.authStore.record?.id;
-
   if (!user) throw new Error("Not authorized.");
 
   const family = await pb.collection<Family>("families").getOne(familyId);
@@ -95,6 +102,17 @@ export async function getFamilyDetails(
   return { ...family, members, joinedAt };
 }
 
+export async function leaveFamily(familyId: string) {
+  const user = pb.authStore.record?.id;
+  if (!user) throw new Error("Not authorized.");
+
+  const family = await getFamily(familyId);
+
+  await pb.collection("families").update(familyId, {
+    members: family.members.filter((member) => member !== user),
+  });
+}
+
 export async function getUserLocations(
   familyId: string,
 ): Promise<MemberLocation[]> {
@@ -104,6 +122,13 @@ export async function getUserLocations(
   );
 
   return locations;
+}
+
+export async function createLocation(lat: number, lon: number) {
+  const user = pb.authStore.record?.id;
+  if (!user) throw new Error("Not authorized.");
+
+  await pb.collection("locations").create({ user, coordinates: { lat, lon } });
 }
 
 export async function getUsers(ids: string[]): Promise<User[]> {
@@ -135,4 +160,75 @@ export async function createInvitation(
   return await pb
     .collection<Invitation>("invitations")
     .create({ sender, recipient, family: familyId });
+}
+
+export async function getUser(userId: string): Promise<User> {
+  const user = pb.authStore.record?.id;
+  if (!user) {
+    throw new Error("Not authorized.");
+  }
+
+  return await pb.collection<User>("users").getOne(userId);
+}
+
+export async function getMe(): Promise<User> {
+  const user = pb.authStore.record?.id;
+  if (!user) {
+    throw new Error("Not authorized.");
+  }
+
+  return await pb.collection<User>("users").getOne(user);
+}
+
+export function getAvatarUri(user: User): string {
+  if (!user.avatar) return "";
+  return `${getBaseUrl()}api/files/users/${user.id}/${user.avatar}`;
+}
+
+export async function getMyInvitations(): Promise<FamilyInvitation[]> {
+  return await pb.send<FamilyInvitation[]>(`/mobile/invitations`, {
+    method: "GET",
+  });
+}
+
+export function subscribeToInvitations(
+  callback: (fi: FamilyInvitation) => void,
+) {
+  const user = pb.authStore.record?.id;
+  if (!user) {
+    throw new Error("Not authorized.");
+  }
+
+  pb.collection<Invitation>("invitations").subscribe(
+    "*",
+    async ({ record }) => {
+      if (record.recipient !== user || record.accepted) return;
+
+      const family = await getFamily(record.family);
+      callback.call(null, {
+        id: record.id,
+        familyName: family.name,
+        createdAt: record.createdAt,
+      });
+    },
+  );
+}
+
+export function unsubscribeFromInvitations() {
+  pb.collection("users").unsubscribe();
+}
+
+export async function acceptInvitation(invitationId: string): Promise<string> {
+  const { familyId } = await pb.send<{ familyId: string }>(
+    `/mobile/invitations/${invitationId}`,
+    {
+      method: "PUT",
+    },
+  );
+
+  return familyId;
+}
+
+export async function declineInvitation(invitationId: string) {
+  await pb.collection("invitations").delete(invitationId);
 }

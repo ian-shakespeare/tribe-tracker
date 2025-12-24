@@ -46,7 +46,7 @@ export default function FamilyDetailScreen({
       const familyId = route.params.familyId;
       getFamilyDetails(familyId)
         .then(setFamilyDetails)
-        .catch((e: Error) => toast.error(e.message));
+        .catch((e: Error) => toast.danger(e.message));
     }, [route, setFamilyDetails, toast]),
   );
 

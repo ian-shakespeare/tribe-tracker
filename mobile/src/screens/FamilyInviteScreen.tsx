@@ -21,6 +21,7 @@ import { StyleSheet, View } from "react-native";
 import { useToast } from "../contexts/Toast";
 import { useFocusEffect } from "@react-navigation/native";
 import BackArrowIcon from "../components/BackArrowIcon";
+import InviteIcon from "../components/InviteIcon";
 
 type ListItemProps = {
   item: Invitation;
@@ -49,7 +50,7 @@ export default function FamilyInviteScreen({
       const familyId = route.params.familyId;
       getPendingInvitations(familyId)
         .then(setPendingInvitations)
-        .catch((e: Error) => toast.error(e.message));
+        .catch((e: Error) => toast.danger(e.message));
     }, [route, setPendingInvitations, toast]),
   );
 
@@ -58,7 +59,7 @@ export default function FamilyInviteScreen({
 
     getUsers(pendingInvitations.map(({ recipient }) => recipient))
       .then((u) => setUsers(new Map(u.map((user) => [user.id, user]))))
-      .catch((e: Error) => toast.error(e.message));
+      .catch((e: Error) => toast.danger(e.message));
   }, [pendingInvitations, setUsers, toast]);
 
   const handleSendInvite = () => {
@@ -67,7 +68,7 @@ export default function FamilyInviteScreen({
       .then((invitation) =>
         setPendingInvitations((prev) => [...prev, invitation]),
       )
-      .catch((e: Error) => toast.error(e.message));
+      .catch((e: Error) => toast.danger(e.message));
   };
 
   const renderListItem = ({ item }: ListItemProps) => {
@@ -102,7 +103,11 @@ export default function FamilyInviteScreen({
         inputMode="email"
         style={styles.headerInput}
       />
-      <Button onPress={handleSendInvite}>Send</Button>
+      <Button
+        size="small"
+        accessoryRight={InviteIcon}
+        onPress={handleSendInvite}
+      ></Button>
     </View>
   );
 

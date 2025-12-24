@@ -28,7 +28,7 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
     () =>
       createFamily(name)
         .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
-        .catch((e: Error) => toast.error(e.message)),
+        .catch((e: Error) => toast.danger(e.message)),
     [name, navigation, toast],
   );
 
