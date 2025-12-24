@@ -1,0 +1,11 @@
+.github/
+mobile/
+display/
+server/pb_data/
+server/Makefile
+
+.idea/
+.vscode/
+*.swp
+
+*README.md
