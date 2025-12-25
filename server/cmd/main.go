@@ -162,7 +162,7 @@ func main() {
       from invitations i
       join families f
         on i.family = f.id
-      where i.recipient = 'pbtmbvboyb5rz1x'
+      where i.recipient = {:userId}
         and i.accepted = 0
       order by createdAt desc
       `
