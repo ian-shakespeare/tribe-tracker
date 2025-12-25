@@ -65,12 +65,12 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       <Divider />
       <Layout style={styles.layout}>
         <View style={styles.container}>
-          {!user ? (
-            <Text category="p1" appearance="hint" style={styles.text}>
-              Loading...
-            </Text>
-          ) : (
-            <View style={styles.content}>
+          <View style={styles.content}>
+            {!user ? (
+              <Text category="p1" appearance="hint" style={styles.text}>
+                Loading...
+              </Text>
+            ) : (
               <View>
                 <AvatarHero size={AVATAR_SIZE} user={user} />
                 <Text category="h1" style={styles.nameText}>
@@ -83,11 +83,11 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
                   Joined {formatDate(new Date(user.created))}
                 </Text>
               </View>
-              <Button style={styles.button} onPress={handleSignOut}>
-                Sign Out
-              </Button>
-            </View>
-          )}
+            )}
+            <Button style={styles.button} onPress={handleSignOut}>
+              Sign Out
+            </Button>
+          </View>
         </View>
       </Layout>
     </SafeAreaView>

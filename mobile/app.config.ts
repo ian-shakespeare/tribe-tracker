@@ -6,7 +6,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   slug: "tribe-tracker",
   version: "0.0.9",
   orientation: "portrait",
-  icon: "./assets/icon.png",
   userInterfaceStyle: "dark",
   newArchEnabled: true,
   splash: {
