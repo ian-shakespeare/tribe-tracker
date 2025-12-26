@@ -31,12 +31,12 @@ export type StackParamList = {
 const Tab = createBottomTabNavigator<StackParamList>();
 const Stack = createNativeStackNavigator<StackParamList>();
 
-function BottomTabBar({ navigation, state }: BottomTabBarProps) {
+function BottomTabBar({ navigation, state, insets }: BottomTabBarProps) {
   return (
     <BottomNavigation
       selectedIndex={state.index}
       onSelect={(index) => navigation.navigate(state.routeNames[index])}
-      style={{ paddingBottom: 12 }}
+      style={{ paddingBottom: insets.bottom }}
     >
       <BottomNavigationTab title="Map" icon={MapIcon} />
       <BottomNavigationTab title="Families" icon={PeopleIcon} />
