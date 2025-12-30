@@ -41,10 +41,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     [
-      "expo-maps",
+      "expo-image-picker",
       {
-        requestLocationPermission: true,
-        locationPermission: "Allow $(PRODUCT_NAME) to use your location.",
+        photosPermission:
+          "Allow $(PRODUCT_NAME) to access your photos to select a profile picture.",
       },
     ],
     [
@@ -52,6 +52,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       {
         locationAlwaysAndWhenInUsePermission:
           "Allow $(PRODUCT_NAME) to use your location.",
+      },
+    ],
+    [
+      "expo-maps",
+      {
+        requestLocationPermission: true,
+        locationPermission: "Allow $(PRODUCT_NAME) to use your location.",
       },
     ],
     "expo-secure-store",
