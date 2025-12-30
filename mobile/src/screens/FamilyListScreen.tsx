@@ -21,6 +21,9 @@ import { useToast } from "../contexts/Toast";
 import PeopleIcon from "../components/PeopleIcon";
 import { useFocusEffect } from "@react-navigation/native";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
+import * as SecureStore from "expo-secure-store";
+import { SELECTED_FAMILY_KEY } from "../lib/constants";
+import StarIcon from "../components/StarIcon";
 
 type ListItemProps = {
   item: Family;
@@ -37,44 +40,73 @@ export default function FamilyListScreen({
 }: FamilyListScreenProps) {
   const theme = useTheme();
   const toast = useToast();
+  const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
 
   useFocusEffect(
     useCallback(() => {
+      SecureStore.getItemAsync(SELECTED_FAMILY_KEY).then(setSelectedFamilyId);
+
       getFamilies()
         .then(setFamilies)
         .catch((e: Error) => toast.danger(e.message));
     }, [setFamilies]),
   );
 
-  const renderSwipeAction = (familyId: string) => (
-    <Pressable
-      onPress={() =>
-        Alert.alert("Leave Family", "You can't rejoin without an invitation.", [
-          { text: "Cancel", onPress: () => {} },
-          {
-            text: "OK",
-            onPress: () =>
-              leaveFamily(familyId)
-                .then(() =>
-                  setFamilies((prev) =>
-                    prev.filter(({ id }) => id !== familyId),
-                  ),
-                )
-                .catch((e: Error) => toast.danger(e.message)),
-            isPreferred: true,
-          },
-        ])
+  const handleSelectFamily = (familyId: string) => {
+    SecureStore.setItem(SELECTED_FAMILY_KEY, familyId);
+    setSelectedFamilyId(familyId);
+  };
+
+  const handleLeaveFamily = async (familyId: string) => {
+    try {
+      await leaveFamily(familyId);
+      setFamilies((prev) => prev.filter(({ id }) => id !== familyId));
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.danger(e.message);
       }
-      style={({ pressed }) => ({
-        backgroundColor: theme["color-danger-default"],
-        paddingHorizontal: 16,
-        justifyContent: "center",
-        opacity: pressed ? 0.6 : 1,
-      })}
-    >
-      <Text>Leave</Text>
-    </Pressable>
+    }
+  };
+
+  const renderSwipeAction = (familyId: string) => (
+    <View style={{ flexDirection: "row" }}>
+      <Pressable
+        onPress={() => handleSelectFamily(familyId)}
+        style={({ pressed }) => ({
+          backgroundColor: theme["color-primary-default"],
+          paddingHorizontal: 16,
+          justifyContent: "center",
+          opacity: pressed ? 0.6 : 1,
+        })}
+      >
+        <Text>Select</Text>
+      </Pressable>
+      <Pressable
+        onPress={() =>
+          Alert.alert(
+            "Leave Family",
+            "You can't rejoin without an invitation.",
+            [
+              { text: "Cancel", onPress: () => {} },
+              {
+                text: "OK",
+                onPress: () => handleLeaveFamily(familyId),
+                isPreferred: true,
+              },
+            ],
+          )
+        }
+        style={({ pressed }) => ({
+          backgroundColor: theme["color-danger-default"],
+          paddingHorizontal: 16,
+          justifyContent: "center",
+          opacity: pressed ? 0.6 : 1,
+        })}
+      >
+        <Text>Leave</Text>
+      </Pressable>
+    </View>
   );
 
   const renderListItem = useCallback(
@@ -84,6 +116,7 @@ export default function FamilyListScreen({
           title={toTitleCase(item.name)}
           style={{ paddingHorizontal: 16 }}
           accessoryLeft={PeopleIcon}
+          accessoryRight={item.id == selectedFamilyId ? StarIcon : undefined}
           onPress={() => navigation.push("familydetail", { familyId: item.id })}
         />
       </Swipeable>
