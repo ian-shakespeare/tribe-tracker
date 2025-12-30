@@ -21,6 +21,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { acceptInvitation, declineInvitation, getMyInvitations } from "../lib";
 import { useToast } from "../contexts/Toast";
 import RefreshIcon from "../components/RefreshIcon";
+import * as SecureStore from "expo-secure-store";
+import { SELECTED_FAMILY_KEY } from "../lib/constants";
 
 type ListItemProps = {
   item: FamilyInvitation;
@@ -46,6 +48,18 @@ export default function InvitationListScreen({
         .catch((e: Error) => toast.danger(e.message));
     }, [toast]),
   );
+
+  const handleAcceptInvite = async (invitationId: string) => {
+    try {
+      const familyId = await acceptInvitation(invitationId);
+      SecureStore.setItem(SELECTED_FAMILY_KEY, familyId);
+      navigation.replace("familydetail", { familyId });
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.danger(e.message);
+      }
+    }
+  };
 
   const renderBackAction = () => (
     <TopNavigationAction
@@ -82,16 +96,7 @@ export default function InvitationListScreen({
       >
         DECLINE
       </Button>
-      <Button
-        size="tiny"
-        onPress={() => {
-          acceptInvitation(invitationId)
-            .then((familyId) =>
-              navigation.replace("familydetail", { familyId }),
-            )
-            .catch((e: Error) => toast.danger(e.message));
-        }}
-      >
+      <Button size="tiny" onPress={() => handleAcceptInvite(invitationId)}>
         ACCEPT
       </Button>
     </View>

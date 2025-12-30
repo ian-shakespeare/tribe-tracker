@@ -61,6 +61,5 @@ const styles = StyleSheet.create({
   image: {
     aspectRatio: 1,
     borderRadius: 100,
-    backgroundColor: "purple",
   },
 });

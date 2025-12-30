@@ -13,8 +13,10 @@ import FamilyInviteScreen from "./screens/FamilyInviteScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import PeopleIcon from "./components/PeopleIcon";
 import PersonIcon from "./components/PersonIcon";
-import MapIcon from "./components/MapIcon";
 import InvitationListScreen from "./screens/InvitationListScreen";
+import PostListScreen from "./screens/PostListScreen";
+import ImageIcon from "./components/ImageIcon";
+import GlobeIcon from "./components/GlobeIcon";
 
 export type StackParamList = {
   map: undefined;
@@ -26,6 +28,7 @@ export type StackParamList = {
   tabs: undefined;
   profile: undefined;
   invitationlist: undefined;
+  postlist: undefined;
 };
 
 const Tab = createBottomTabNavigator<StackParamList>();
@@ -38,7 +41,8 @@ function BottomTabBar({ navigation, state, insets }: BottomTabBarProps) {
       onSelect={(index) => navigation.navigate(state.routeNames[index])}
       style={{ paddingBottom: insets.bottom }}
     >
-      <BottomNavigationTab title="Map" icon={MapIcon} />
+      <BottomNavigationTab title="Map" icon={GlobeIcon} />
+      <BottomNavigationTab title="Posts" icon={ImageIcon} />
       <BottomNavigationTab title="Families" icon={PeopleIcon} />
       <BottomNavigationTab title="Profile" icon={PersonIcon} />
     </BottomNavigation>
@@ -49,6 +53,7 @@ function TabNavigator() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={BottomTabBar}>
       <Tab.Screen name="map" component={MapScreen} />
+      <Tab.Screen name="postlist" component={PostListScreen} />
       <Tab.Screen name="familylist" component={FamilyListScreen} />
       <Tab.Screen name="profile" component={ProfileScreen} />
     </Tab.Navigator>
