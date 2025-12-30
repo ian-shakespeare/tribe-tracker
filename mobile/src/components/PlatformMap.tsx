@@ -1,6 +1,5 @@
-import { AppleMaps, GoogleMaps } from "expo-maps";
+import { AppleMaps, CameraPosition, Coordinates, GoogleMaps } from "expo-maps";
 import { Platform, Text } from "react-native";
-import { Coordinates } from "../lib/models";
 
 type PlatformMapMarker = {
   title: string;
@@ -8,21 +7,30 @@ type PlatformMapMarker = {
 };
 
 type PlatformMapProps = {
-  markers: PlatformMapMarker[];
+  markers?: PlatformMapMarker[];
+  cameraPosition?: CameraPosition;
 };
 
-export default function PlatformMap({ markers }: PlatformMapProps) {
-  const platformMarkers = markers.map(
-    ({ title, coordinates: { lat, lon } }) => ({
-      title,
-      coordinates: { latitude: lat, longitude: lon },
-    }),
-  );
-
+export default function PlatformMap({
+  markers,
+  cameraPosition,
+}: PlatformMapProps) {
   if (Platform.OS === "ios") {
-    return <AppleMaps.View style={{ flex: 1 }} markers={platformMarkers} />;
+    return (
+      <AppleMaps.View
+        style={{ flex: 1 }}
+        markers={markers}
+        cameraPosition={cameraPosition}
+      />
+    );
   } else if (Platform.OS === "android") {
-    return <GoogleMaps.View style={{ flex: 1 }} markers={platformMarkers} />;
+    return (
+      <GoogleMaps.View
+        style={{ flex: 1 }}
+        markers={markers}
+        cameraPosition={cameraPosition}
+      />
+    );
   } else {
     return <Text>Maps are only available on Android and iOS</Text>;
   }
