@@ -1,25 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import PlatformMap from "../components/PlatformMap";
 import { Family, MemberLocation } from "../lib/models";
 import { toTitleCase } from "../lib/strings";
 import { useFocusEffect } from "@react-navigation/native";
-import { createLocation, getFamilies, getUserLocations } from "../lib";
+import { createLocation, getFamily, getUserLocations } from "../lib";
 import { useToast } from "../contexts/Toast";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
 import { SELECTED_FAMILY_KEY } from "../lib/constants";
-import { StyleSheet, View } from "react-native";
-import { Button, IndexPath, Select, SelectItem } from "@ui-kitten/components";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet } from "react-native";
+import {
+  Divider,
+  Layout,
+  TopNavigation,
+  TopNavigationAction,
+  useTheme,
+} from "@ui-kitten/components";
+import { SafeAreaView } from "react-native-safe-area-context";
 import RefreshIcon from "../components/RefreshIcon";
+import { Coordinates } from "expo-maps";
 
 export default function MapScreen() {
+  const theme = useTheme();
   const toast = useToast();
-  const { top } = useSafeAreaInsets();
-  const [families, setFamilies] = useState<Family[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState<IndexPath | IndexPath[]>(
-    new IndexPath(-1),
-  );
+  const [myCoords, setMyCoords] = useState<Coordinates | null>(null);
+  const [family, setFamily] = useState<Family | null>(null);
   const [locations, setLocations] = useState<MemberLocation[]>([]);
 
   useFocusEffect(
@@ -32,34 +37,22 @@ export default function MapScreen() {
             accuracy: Location.LocationAccuracy.Lowest,
           });
         })
-        .then(({ coords }) => createLocation(coords.latitude, coords.longitude))
+        .then(({ coords }) => {
+          setMyCoords(coords);
+          return createLocation(coords.latitude, coords.longitude);
+        })
         .catch((e: Error) => toast.danger(e.message));
 
-      getFamilies()
-        .then((f) => {
-          setFamilies(f);
+      const familyId = SecureStore.getItem(SELECTED_FAMILY_KEY);
+      if (!familyId) return;
 
-          const initialFamily = SecureStore.getItem(SELECTED_FAMILY_KEY) ?? "";
-          const index = f.findIndex(({ id }) => id === initialFamily);
-          if (index === -1) {
-            SecureStore.setItem(SELECTED_FAMILY_KEY, "");
-            return;
-          }
+      getFamily(familyId).then(setFamily);
 
-          setSelectedIndex(new IndexPath(index));
-        })
+      getUserLocations(familyId)
+        .then(setLocations)
         .catch((e: Error) => toast.danger(e.message));
     }, []),
   );
-
-  useEffect(() => {
-    const family = families.at((selectedIndex as IndexPath).row);
-    if (!family) return;
-
-    getUserLocations(family.id)
-      .then(setLocations)
-      .catch((e: Error) => toast.danger(e.message));
-  }, [selectedIndex]);
 
   const handleRefresh = async () => {
     try {
@@ -68,9 +61,7 @@ export default function MapScreen() {
       });
       await createLocation(coords.latitude, coords.longitude);
 
-      const family = families.at((selectedIndex as IndexPath).row);
       if (!family) return;
-
       setLocations(await getUserLocations(family.id));
     } catch (e) {
       if (e instanceof Error) {
@@ -79,50 +70,49 @@ export default function MapScreen() {
     }
   };
 
+  const renderMenuActions = useCallback(
+    () => <TopNavigationAction icon={RefreshIcon} onPress={handleRefresh} />,
+    [],
+  );
+
   return (
-    <View style={styles.container}>
-      {families.length >= 1 && (
-        <View
-          style={[
-            styles.selectContainer,
-            {
-              top: top + 12,
-            },
-          ]}
-        >
-          <Select
-            value={families.at((selectedIndex as IndexPath).row)?.name ?? ""}
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-            style={styles.select}
-          >
-            {families.map(({ name }) => (
-              <SelectItem title={name} />
-            ))}
-          </Select>
-          <Button
-            size="tiny"
-            accessoryRight={RefreshIcon}
-            onPress={handleRefresh}
-          ></Button>
-        </View>
-      )}
-      <PlatformMap
-        markers={locations.map(({ firstName, lastName, coordinates }) => ({
-          title: toTitleCase(`${firstName} ${lastName}`),
-          coordinates,
-        }))}
+    <SafeAreaView
+      edges={["top"]}
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme["background-basic-color-1"] },
+      ]}
+    >
+      <TopNavigation
+        title={family?.name ?? "No Select Family"}
+        alignment="center"
+        accessoryRight={renderMenuActions}
       />
-    </View>
+      <Divider />
+      <Layout style={styles.layout}>
+        <PlatformMap
+          cameraPosition={!myCoords ? undefined : { coordinates: myCoords }}
+          markers={locations.map(({ firstName, lastName, coordinates }) => ({
+            title: toTitleCase(`${firstName} ${lastName}`),
+            coordinates: {
+              latitude: coordinates.lat,
+              longitude: coordinates.lon,
+            },
+          }))}
+        />
+      </Layout>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    position: "relative",
   },
-  selectContainer: {
+  layout: {
+    flex: 1,
+  },
+  actionContainer: {
     position: "absolute",
     left: 16,
     right: 16,
