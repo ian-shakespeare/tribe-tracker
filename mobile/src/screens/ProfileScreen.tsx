@@ -19,6 +19,7 @@ import { User } from "../lib/models";
 import { formatDate } from "../lib/strings";
 import AvatarHero from "../components/AvatarHero";
 import BellIcon from "../components/BellIcon";
+import PencilIcon from "../components/PencilIcon";
 
 const AVATAR_SIZE = 200;
 
@@ -42,6 +43,13 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     navigation.replace("signin");
   };
 
+  const renderEditAction = () => (
+    <TopNavigationAction
+      icon={PencilIcon}
+      onPress={() => console.log("TODO: create edit profile screen")}
+    />
+  );
+
   const renderNotificationAction = () => (
     <TopNavigationAction
       icon={BellIcon}
@@ -60,6 +68,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       <TopNavigation
         title="Profile"
         alignment="center"
+        accessoryLeft={renderEditAction}
         accessoryRight={renderNotificationAction}
       />
       <Divider />
