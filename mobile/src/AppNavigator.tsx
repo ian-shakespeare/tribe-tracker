@@ -17,6 +17,7 @@ import InvitationListScreen from "./screens/InvitationListScreen";
 import PostListScreen from "./screens/PostListScreen";
 import ImageIcon from "./components/ImageIcon";
 import GlobeIcon from "./components/GlobeIcon";
+import ProfileEditScreen from "./screens/ProfileEditScreen";
 
 export type StackParamList = {
   map: undefined;
@@ -29,6 +30,7 @@ export type StackParamList = {
   profile: undefined;
   invitationlist: undefined;
   postlist: undefined;
+  profileedit: undefined;
 };
 
 const Tab = createBottomTabNavigator<StackParamList>();
@@ -68,6 +70,7 @@ export default function AppNavigator() {
       <Stack.Screen name="familydetail" component={FamilyDetailScreen} />
       <Stack.Screen name="familyinvite" component={FamilyInviteScreen} />
       <Stack.Screen name="invitationlist" component={InvitationListScreen} />
+      <Stack.Screen name="profileedit" component={ProfileEditScreen} />
       <Stack.Screen name="tabs" component={TabNavigator} />
     </Stack.Navigator>
   );

@@ -34,6 +34,34 @@ export async function createUser(user: NewUser): Promise<User> {
   return await pb.collection<User>("users").create(user);
 }
 
+export async function updateMe(
+  fields: Partial<Omit<User, "id" | "created" | "updated" | "email">>,
+): Promise<User> {
+  const user = pb.authStore.record?.id;
+  if (!user) {
+    throw new Error("Not authorized.");
+  }
+
+  const data = new FormData();
+  if (fields.firstName) {
+    data.append("firstName", fields.firstName.trim().toLowerCase());
+  }
+
+  if (fields.lastName) {
+    data.append("lastName", fields.lastName.trim().toLowerCase());
+  }
+
+  if (fields.avatar) {
+    data.append("avatar", {
+      uri: fields.avatar,
+      type: "image/*",
+      name: fields.avatar.split("/").pop(),
+    } as any);
+  }
+
+  return await pb.collection("users").update<User>(user, data);
+}
+
 export async function signIn(email: string, password: string) {
   await pb.collection("users").authWithPassword(email, password);
 }
@@ -180,42 +208,19 @@ export async function getMe(): Promise<User> {
   return await pb.collection<User>("users").getOne(user);
 }
 
-export function getAvatarUri(user: User): string {
-  if (!user.avatar) return "";
-  return `${getBaseUrl()}api/files/users/${user.id}/${user.avatar}`;
+export function getAvatarUri(avatar: string): string {
+  const user = pb.authStore.record?.id;
+  if (!user) {
+    throw new Error("Not authorized.");
+  }
+
+  return `${getBaseUrl()}api/files/users/${user}/${avatar}`;
 }
 
 export async function getMyInvitations(): Promise<FamilyInvitation[]> {
   return await pb.send<FamilyInvitation[]>(`/mobile/invitations`, {
     method: "GET",
   });
-}
-
-export function subscribeToInvitations(
-  callback: (fi: FamilyInvitation) => void,
-) {
-  const user = pb.authStore.record?.id;
-  if (!user) {
-    throw new Error("Not authorized.");
-  }
-
-  pb.collection<Invitation>("invitations").subscribe(
-    "*",
-    async ({ record }) => {
-      if (record.recipient !== user || record.accepted) return;
-
-      const family = await getFamily(record.family);
-      callback.call(null, {
-        id: record.id,
-        familyName: family.name,
-        createdAt: record.createdAt,
-      });
-    },
-  );
-}
-
-export function unsubscribeFromInvitations() {
-  pb.collection("users").unsubscribe();
 }
 
 export async function acceptInvitation(invitationId: string): Promise<string> {
