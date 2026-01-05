@@ -4,14 +4,18 @@ import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "@ui-kitten/components";
 import { Image } from "expo-image";
 
-type AvatarHeroProps = {
-  user: User;
+type AvatarHeroProps = Pick<User, "avatar" | "firstName" | "lastName"> & {
   size: number;
 };
 
-export default function AvatarHero({ user, size }: AvatarHeroProps) {
+export default function AvatarHero({
+  avatar,
+  firstName,
+  lastName,
+  size,
+}: AvatarHeroProps) {
   const theme = useTheme();
-  const uri = getAvatarUri(user);
+  const uri = getAvatarUri(avatar ?? "");
 
   return (
     <View
@@ -24,9 +28,9 @@ export default function AvatarHero({ user, size }: AvatarHeroProps) {
         },
       ]}
     >
-      {!user.avatar ? (
+      {!avatar ? (
         <Text category="h1" style={styles.text}>
-          {`${user.firstName[0] + user.lastName[0]}`.toUpperCase()}
+          {`${firstName[0] + lastName[0]}`.toUpperCase()}
         </Text>
       ) : (
         <Image

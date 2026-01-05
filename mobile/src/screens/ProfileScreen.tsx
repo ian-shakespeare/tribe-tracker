@@ -46,7 +46,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const renderEditAction = () => (
     <TopNavigationAction
       icon={PencilIcon}
-      onPress={() => console.log("TODO: create edit profile screen")}
+      onPress={() => navigation.navigate("profileedit")}
     />
   );
 
@@ -81,7 +81,12 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
               </Text>
             ) : (
               <View>
-                <AvatarHero size={AVATAR_SIZE} user={user} />
+                <AvatarHero
+                  size={AVATAR_SIZE}
+                  avatar={user.avatar}
+                  firstName={user.firstName}
+                  lastName={user.lastName}
+                />
                 <Text category="h1" style={styles.nameText}>
                   {`${user.firstName} ${user.lastName}`}
                 </Text>

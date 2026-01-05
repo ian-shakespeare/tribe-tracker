@@ -70,3 +70,9 @@ export type FamilyInvitation = {
   familyName: string;
   createdAt: string;
 };
+
+export type LocalFile = {
+  uri: string;
+  name: string;
+  type: string;
+};
