@@ -21,6 +21,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       light: "./assets/ios-light.png",
       tinted: "./assets/ios-tinted.png",
     },
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+    },
   },
   android: {
     adaptiveIcon: {
