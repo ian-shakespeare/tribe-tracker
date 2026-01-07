@@ -1,12 +1,13 @@
-name: Publish Docker Image
+name: Release Docker Image
 
 on:
+  workflow_dispatch:
   release:
     types: [created]
 
 jobs:
-  publish:
-    name: Publish
+  release:
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -18,12 +19,12 @@ jobs:
     - name: Log in to GHCR
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build Docker Image
+    - name: Build Docker image
       run: |
         docker build -t ghcr.io/${{ github.repository }}:${{ github.ref_name }} \
           -t ghcr.io/${{ github.repository }}:latest .
 
-    - name: Push Docker Image
+    - name: Push Docker image
       run: |
         docker push ghcr.io/${{ github.repository }}:${{ github.ref_name }}
         docker push ghcr.io/${{ github.repository }}:latest

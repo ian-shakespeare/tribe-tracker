@@ -56,7 +56,7 @@ export default function ProfileEditScreen({
           }
         })
         .catch((e: Error) => toast.danger(e.message));
-    }, []),
+    }, [toast]),
   );
 
   const handlePickImage = async () => {

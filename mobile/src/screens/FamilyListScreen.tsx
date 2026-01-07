@@ -50,7 +50,7 @@ export default function FamilyListScreen({
       getFamilies()
         .then(setFamilies)
         .catch((e: Error) => toast.danger(e.message));
-    }, [setFamilies]),
+    }, [toast, setFamilies]),
   );
 
   const handleSelectFamily = (familyId: string) => {
@@ -109,19 +109,16 @@ export default function FamilyListScreen({
     </View>
   );
 
-  const renderListItem = useCallback(
-    ({ item }: ListItemProps) => (
-      <Swipeable renderRightActions={() => renderSwipeAction(item.id)}>
-        <ListItem
-          title={toTitleCase(item.name)}
-          style={{ paddingHorizontal: 16 }}
-          accessoryLeft={PeopleIcon}
-          accessoryRight={item.id == selectedFamilyId ? StarIcon : undefined}
-          onPress={() => navigation.push("familydetail", { familyId: item.id })}
-        />
-      </Swipeable>
-    ),
-    [navigation],
+  const renderListItem = ({ item }: ListItemProps) => (
+    <Swipeable renderRightActions={() => renderSwipeAction(item.id)}>
+      <ListItem
+        title={toTitleCase(item.name)}
+        style={{ paddingHorizontal: 16 }}
+        accessoryLeft={PeopleIcon}
+        accessoryRight={item.id === selectedFamilyId ? StarIcon : undefined}
+        onPress={() => navigation.push("familydetail", { familyId: item.id })}
+      />
+    </Swipeable>
   );
 
   const renderMenuActions = useCallback(
@@ -152,7 +149,7 @@ export default function FamilyListScreen({
         {families.length < 1 ? (
           <View style={styles.container}>
             <Text category="h6" style={styles.text}>
-              You don't have a family yet.{"\n"}But you can{" "}
+              You don&apos;t have a family yet.{"\n"}But you can{" "}
               <Text
                 category="h6"
                 onPress={() => navigation.navigate("familynew")}

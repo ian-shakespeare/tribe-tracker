@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "prebuild": "expo prebuild --clean"
+    "prebuild": "expo prebuild --clean",
+    "lint": "expo lint"
   },
   "dependencies": {
     "@eva-design/eva": "^2.2.0",
@@ -16,7 +17,7 @@
     "@react-navigation/native-stack": "^7.8.6",
     "@ui-kitten/components": "^5.3.1",
     "@ui-kitten/eva-icons": "^5.3.1",
-    "expo": "~54.0.30",
+    "expo": "~54.0.31",
     "expo-crypto": "~15.0.8",
     "expo-dev-client": "~6.0.20",
     "expo-image": "~3.0.11",
@@ -38,6 +39,11 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~10.0.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.7.4",
     "typescript": "~5.9.2"
   },
   "private": true

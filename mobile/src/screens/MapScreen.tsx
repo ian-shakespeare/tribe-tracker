@@ -51,7 +51,7 @@ export default function MapScreen() {
       getUserLocations(familyId)
         .then(setLocations)
         .catch((e: Error) => toast.danger(e.message));
-    }, []),
+    }, [toast]),
   );
 
   const handleRefresh = async () => {
@@ -70,9 +70,8 @@ export default function MapScreen() {
     }
   };
 
-  const renderMenuActions = useCallback(
-    () => <TopNavigationAction icon={RefreshIcon} onPress={handleRefresh} />,
-    [],
+  const renderMenuActions = () => (
+    <TopNavigationAction icon={RefreshIcon} onPress={handleRefresh} />
   );
 
   return (
