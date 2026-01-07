@@ -40,7 +40,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
         const baseUrl = getBaseUrl();
         setApiUrl(baseUrl);
       });
-  }, []);
+  }, [navigation]);
 
   const handleSubmit = async () => {
     try {
@@ -49,7 +49,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
         saveBaseUrl(url);
       }
 
-      if (authMode == "register") {
+      if (authMode === "register") {
         const data = {
           firstName: firstName.trim().toLowerCase(),
           lastName: lastName.trim().toLowerCase(),

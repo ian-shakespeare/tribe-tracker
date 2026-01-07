@@ -60,7 +60,8 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
           <View style={styles.input}>
             <Input placeholder="Name" value={name} onChangeText={setName} />
             <Text category="p2" appearance="hint" style={styles.text}>
-              Something like "Smiths", "Kevin's Cool Kids", etc.
+              Something like &quot;Smiths&quot;, &quot;Kevin&apos;s Cool
+              Kids&quot;, etc.
             </Text>
           </View>
           <Button onPress={handleSubmit}>Create</Button>

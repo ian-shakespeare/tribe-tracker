@@ -12,7 +12,7 @@ import { StyleSheet, View } from "react-native";
 
 type PostListScreenProps = NativeStackScreenProps<StackParamList, "postlist">;
 
-export default function PostListScreen({}: PostListScreenProps) {
+export default function PostListScreen({ navigation: _ }: PostListScreenProps) {
   const theme = useTheme();
 
   return (

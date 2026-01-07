@@ -28,6 +28,34 @@ type ListItemProps = {
   index: number;
 };
 
+type ListHeaderProps = {
+  email: string;
+  setEmail: (email: string) => void;
+  onSendInvite: () => void;
+};
+
+function ListHeader({ email, setEmail, onSendInvite }: ListHeaderProps) {
+  return (
+    <View style={styles.header}>
+      <Input
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        inputMode="email"
+        style={styles.headerInput}
+      />
+      <Button
+        size="small"
+        accessoryRight={InviteIcon}
+        onPress={onSendInvite}
+      ></Button>
+    </View>
+  );
+}
+
 type FamilyInviteScreenProps = NativeStackScreenProps<
   StackParamList,
   "familyinvite"
@@ -91,26 +119,6 @@ export default function FamilyInviteScreen({
     />
   );
 
-  const renderHeader = () => (
-    <View style={styles.header}>
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        inputMode="email"
-        style={styles.headerInput}
-      />
-      <Button
-        size="small"
-        accessoryRight={InviteIcon}
-        onPress={handleSendInvite}
-      ></Button>
-    </View>
-  );
-
   const renderEmpty = () => (
     <View style={styles.container}>
       <Text category="p1" appearance="hint" style={styles.emptyText}>
@@ -138,7 +146,13 @@ export default function FamilyInviteScreen({
           keyExtractor={({ id }) => String(id)}
           data={pendingInvitations}
           renderItem={renderListItem}
-          ListHeaderComponent={renderHeader}
+          ListHeaderComponent={
+            <ListHeader
+              email={email}
+              setEmail={setEmail}
+              onSendInvite={handleSendInvite}
+            />
+          }
           ListEmptyComponent={renderEmpty}
         />
       </Layout>

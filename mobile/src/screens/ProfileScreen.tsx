@@ -35,7 +35,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       getMe()
         .then(setUser)
         .catch((e: Error) => toast.danger(e.message));
-    }, []),
+    }, [toast]),
   );
 
   const handleSignOut = () => {
