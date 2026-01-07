@@ -1,9 +1,11 @@
 BIN := bin/tribetrackerserver
+CYCLO := gocyclo
 DATA := pb_data
 GO := go
 LINT := golangci-lint
 MAIN := cmd/main.go
 command := serve
+cyclolevel := 15
 
 all: run
 
@@ -22,4 +24,7 @@ lint:
 fmt:
 	$(GO) fmt ./...
 
-.PHONY: clean fmt lint
+cyclo:
+	$(CYCLO) -over $(cyclolevel) .
+
+.PHONY: clean cyclo fmt lint
