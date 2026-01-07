@@ -14,7 +14,7 @@ jobs:
       contents: read
     defaults:
       run:
-        working-directory: ./mobile
+        working-directory: mobile
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -40,7 +40,7 @@ jobs:
       contents: read
     defaults:
       run:
-        working-directory: ./server
+        working-directory: server
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -55,6 +55,8 @@ jobs:
 
     - name: Lint source code
       uses: golangci/golangci-lint-action@v9.2.0
+      with:
+        working-directory: server
 
     - name: Check cyclomatic complexity
       run: gocyclo -over 15 .
