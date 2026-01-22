@@ -42,12 +42,12 @@ func TestGetSyncData(t *testing.T) {
 	url := "/mobile/sync"
 	scenarios := []tests.ApiScenario{
 		{
-			Name:            "unauthorzed",
-			Method:          http.MethodGet,
-			URL:             url,
-			ExpectedStatus:  http.StatusOK,
-			ExpectedContent: []string{`"users":[]`, `"families":[]`, `"locations":[]`},
-			TestAppFactory:  setupTestApp,
+			Name:               "unauthorzed",
+			Method:             http.MethodGet,
+			URL:                url,
+			ExpectedStatus:     http.StatusUnauthorized,
+			NotExpectedContent: []string{`users`, `families`, `locations`},
+			TestAppFactory:     setupTestApp,
 		},
 		{
 			Name:   "invalid http method",
@@ -56,7 +56,7 @@ func TestGetSyncData(t *testing.T) {
 			Headers: map[string]string{
 				"Authorization": token,
 			},
-			ExpectedStatus:     http.StatusMethodNotAllowed,
+			ExpectedStatus:     http.StatusNotFound,
 			NotExpectedContent: []string{"users", "families", "locations"},
 			TestAppFactory:     setupTestApp,
 		},
