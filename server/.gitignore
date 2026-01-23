@@ -3,3 +3,6 @@ bin/
 
 # Data
 pb_data/
+
+# Test instance logs
+testdata/auxilary.db
