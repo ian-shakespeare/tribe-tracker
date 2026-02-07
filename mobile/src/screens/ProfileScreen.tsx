@@ -11,32 +11,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { StyleSheet, View } from "react-native";
-import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import { getMe, signOut } from "../lib";
+import { useEffect } from "react";
+import { db, getMyUserId, signOut } from "../lib";
 import { useToast } from "../contexts/Toast";
-import { User } from "../lib/models";
 import { formatDate } from "../lib/strings";
 import AvatarHero from "../components/AvatarHero";
 import BellIcon from "../components/BellIcon";
 import PencilIcon from "../components/PencilIcon";
+import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { usersTable } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 const AVATAR_SIZE = 200;
 
 type ProfileScreenProps = NativeStackScreenProps<StackParamList, "profile">;
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+  const userId = getMyUserId();
   const theme = useTheme();
   const toast = useToast();
-  const [user, setUser] = useState<User | null>(null);
 
-  useFocusEffect(
-    useCallback(() => {
-      getMe()
-        .then(setUser)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [toast]),
+  const { data, error } = useLiveQuery(
+    db.select().from(usersTable).where(eq(usersTable.id, userId)),
   );
+
+  // TODO: render `error` if exists
+
+  const user = data.at(0) ?? null;
 
   const handleSignOut = () => {
     signOut();
@@ -94,7 +95,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
                   {user.email}
                 </Text>
                 <Text category="p1" appearance="hint" style={styles.text}>
-                  Joined {formatDate(new Date(user.created))}
+                  Joined {formatDate(new Date(user.createdAt))}
                 </Text>
               </View>
             )}

@@ -4,14 +4,21 @@ import PocketBase, { AsyncAuthStore } from "pocketbase";
 import { API_URL_KEY } from "./constants";
 import {
   Family,
-  FamilyDetails,
-  FamilyInvitation,
   FamilyMember,
   Invitation,
-  MemberLocation,
   NewUser,
+  RemoteFamily,
+  Location,
+  RemoteUser,
   User,
 } from "./models";
+import { openDatabaseSync } from "expo-sqlite";
+import { drizzle } from "drizzle-orm/expo-sqlite";
+import { familiesTable, familyMembersTable, usersTable } from "../db/schema";
+import { sql } from "drizzle-orm";
+
+const expoDb = openDatabaseSync("tribetracker.db");
+export const db = drizzle(expoDb);
 
 const store = new AsyncAuthStore({
   save: async (serialized) => SecureStore.setItem("pb_auth", serialized),
@@ -26,12 +33,55 @@ export function isSignedIn(): boolean {
   return pb.authStore.isValid;
 }
 
+type SyncResponse = {
+  users: RemoteUser[];
+  families: RemoteFamily[];
+  locations: Location[];
+};
+
+export async function getSyncData(after: Date): Promise<SyncResponse> {
+  console.log("getSyncData");
+  const res = await pb.send<SyncResponse>(`/mobile/sync`, {
+    method: "GET",
+    query: { after: after.toISOString() },
+  });
+
+  console.log("sync data: " + JSON.stringify(res));
+
+  return res;
+}
+
 export async function createUser(user: NewUser): Promise<User> {
   if (user.password !== user.passwordConfirm) {
     throw new Error("Passwords do not match.");
   }
 
-  return await pb.collection<User>("users").create(user);
+  const remoteUser = await pb
+    .collection<RemoteUser>("users")
+    .create({ ...user, emailVisibility: true });
+
+  const [created] = await db
+    .insert(usersTable)
+    .values({
+      id: remoteUser.id,
+      email: remoteUser.email,
+      firstName: remoteUser.firstName,
+      lastName: remoteUser.lastName,
+      createdAt: remoteUser.createdAt,
+      updatedAt: remoteUser.updatedAt,
+    })
+    .onConflictDoUpdate({
+      target: [usersTable.id, usersTable.email],
+      set: {
+        firstName: sql`firstName`,
+        lastName: sql`lastName`,
+        createdAt: sql`createdAt`,
+        updatedAt: sql`updatedAt`,
+      },
+    })
+    .returning();
+
+  return created;
 }
 
 export async function updateMe(
@@ -63,7 +113,24 @@ export async function updateMe(
 }
 
 export async function signIn(email: string, password: string) {
-  await pb.collection("users").authWithPassword(email, password);
+  const { record: remoteUser } = await pb
+    .collection<RemoteUser>("users")
+    .authWithPassword(email, password);
+
+  const [created] = await db
+    .insert(usersTable)
+    .values({
+      id: remoteUser.id,
+      email: remoteUser.email,
+      firstName: remoteUser.firstName,
+      lastName: remoteUser.lastName,
+      createdAt: remoteUser.createdAt,
+      updatedAt: remoteUser.updatedAt,
+    })
+    .onConflictDoNothing({ target: [usersTable.id, usersTable.email] })
+    .returning();
+
+  return created;
 }
 
 export function signOut() {
@@ -72,6 +139,10 @@ export function signOut() {
 
 export async function refreshAuth() {
   await pb.collection("users").authRefresh();
+}
+
+export function getMyUserId(): string {
+  return pb.authStore.record?.id ?? "";
 }
 
 export function getBaseUrl(): string {
@@ -91,9 +162,39 @@ export async function createFamily(name: string): Promise<Family> {
 
   const code = Crypto.randomUUID().replaceAll("-", "");
 
-  return await pb
-    .collection<Family>("families")
-    .create({ name, code, createdBy: user, members: [user] });
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("code", code);
+
+  const { family: remoteFamily, familyMember: remoteFamilyMember } =
+    await pb.send<{ family: RemoteFamily; familyMember: FamilyMember }>(
+      "/mobile/families",
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+  const [[created]] = await Promise.all([
+    db
+      .insert(familiesTable)
+      .values({
+        id: remoteFamily.id,
+        name: remoteFamily.name,
+        createdBy: remoteFamily.createdBy,
+        createdAt: remoteFamily.createdAt,
+        updatedAt: remoteFamily.updatedAt,
+      })
+      .returning(),
+    db.insert(familyMembersTable).values({
+      id: remoteFamilyMember.id,
+      family: remoteFamilyMember.family,
+      user: remoteFamilyMember.user,
+      createdAt: remoteFamilyMember.createdAt,
+    }),
+  ]);
+
+  return created;
 }
 
 export async function getFamilies(): Promise<Family[]> {
@@ -101,55 +202,11 @@ export async function getFamilies(): Promise<Family[]> {
   return results.items;
 }
 
-export async function getFamily(familyId: string): Promise<Family> {
-  const user = pb.authStore.record?.id;
-  if (!user) throw new Error("Not authorized.");
-
-  return await pb.collection<Family>("families").getOne(familyId);
-}
-
-export async function getFamilyDetails(
-  familyId: string,
-): Promise<FamilyDetails> {
-  const user = pb.authStore.record?.id;
-  if (!user) throw new Error("Not authorized.");
-
-  const family = await pb.collection<Family>("families").getOne(familyId);
-
-  const [{ updatedAt: joinedAt }, members] = await Promise.all([
-    family.createdBy === user
-      ? Promise.resolve({ updatedAt: family.createdAt })
-      : pb
-          .collection<Invitation>("invitations")
-          .getFirstListItem(`recipient="${user}" && family="${family.id}"`),
-    pb.send<FamilyMember[]>(`/mobile/families/${family.id}/members`, {
-      method: "GET",
-    }),
-  ]);
-
-  return { ...family, members, joinedAt };
-}
-
 export async function leaveFamily(familyId: string) {
   const user = pb.authStore.record?.id;
   if (!user) throw new Error("Not authorized.");
 
-  const family = await getFamily(familyId);
-
-  await pb.collection("families").update(familyId, {
-    members: family.members.filter((member) => member !== user),
-  });
-}
-
-export async function getUserLocations(
-  familyId: string,
-): Promise<MemberLocation[]> {
-  const locations = await pb.send<MemberLocation[]>(
-    `/mobile/families/${familyId}/members/locations`,
-    {},
-  );
-
-  return locations;
+  throw new Error("TODO: leave family");
 }
 
 export async function createLocation(lat: number, lon: number) {
@@ -157,21 +214,6 @@ export async function createLocation(lat: number, lon: number) {
   if (!user) throw new Error("Not authorized.");
 
   await pb.collection("locations").create({ user, coordinates: { lat, lon } });
-}
-
-export async function getUsers(ids: string[]): Promise<User[]> {
-  const filter = ids.map((id) => `id = "${id}"`).join(" || ");
-  const users = await pb.collection<User>("users").getList(0, 100, { filter });
-  return users.items;
-}
-
-export async function getPendingInvitations(
-  familyId: string,
-): Promise<Invitation[]> {
-  const invitations = await pb
-    .collection<Invitation>("invitations")
-    .getList(0, 100, { filter: `accepted=false && family="${familyId}"` });
-  return invitations.items;
 }
 
 export async function createInvitation(
@@ -190,24 +232,6 @@ export async function createInvitation(
     .create({ sender, recipient, family: familyId });
 }
 
-export async function getUser(userId: string): Promise<User> {
-  const user = pb.authStore.record?.id;
-  if (!user) {
-    throw new Error("Not authorized.");
-  }
-
-  return await pb.collection<User>("users").getOne(userId);
-}
-
-export async function getMe(): Promise<User> {
-  const user = pb.authStore.record?.id;
-  if (!user) {
-    throw new Error("Not authorized.");
-  }
-
-  return await pb.collection<User>("users").getOne(user);
-}
-
 export function getAvatarUri(avatar: string): string {
   const user = pb.authStore.record?.id;
   if (!user) {
@@ -215,25 +239,4 @@ export function getAvatarUri(avatar: string): string {
   }
 
   return `${getBaseUrl()}api/files/users/${user}/${avatar}`;
-}
-
-export async function getMyInvitations(): Promise<FamilyInvitation[]> {
-  return await pb.send<FamilyInvitation[]>(`/mobile/invitations`, {
-    method: "GET",
-  });
-}
-
-export async function acceptInvitation(invitationId: string): Promise<string> {
-  const { familyId } = await pb.send<{ familyId: string }>(
-    `/mobile/invitations/${invitationId}`,
-    {
-      method: "PUT",
-    },
-  );
-
-  return familyId;
-}
-
-export async function declineInvitation(invitationId: string) {
-  await pb.collection("invitations").delete(invitationId);
 }

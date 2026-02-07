@@ -17,13 +17,15 @@ import { StackParamList } from "../AppNavigator";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useCallback, useState } from "react";
 import { useFocusEffect } from "@react-navigation/native";
-import { getAvatarUri, getMe, updateMe } from "../lib";
+import { db, getAvatarUri, getMyUserId, updateMe } from "../lib";
 import { useToast } from "../contexts/Toast";
 import { User } from "../lib/models";
 import { toTitleCase } from "../lib/strings";
 import * as ImagePicker from "expo-image-picker";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { Image } from "expo-image";
+import { usersTable } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 const AVATAR_SIZE = 200;
 
@@ -45,8 +47,11 @@ export default function ProfileEditScreen({
 
   useFocusEffect(
     useCallback(() => {
-      getMe()
-        .then((u) => {
+      const userId = getMyUserId();
+      db.select()
+        .from(usersTable)
+        .where(eq(usersTable.id, userId))
+        .then(([u]) => {
           setUser(u);
           setFirstName(u.firstName);
           setLastName(u.lastName);

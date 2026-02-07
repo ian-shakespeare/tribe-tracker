@@ -1,9 +1,6 @@
 import {
-  Button,
   Divider,
   Layout,
-  List,
-  ListItem,
   Text,
   TopNavigation,
   TopNavigationAction,
@@ -12,22 +9,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import BackArrowIcon from "../components/BackArrowIcon";
-import { FamilyInvitation } from "../lib/models";
-import { formatDate } from "../lib/strings";
-import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import { acceptInvitation, declineInvitation, getMyInvitations } from "../lib";
-import { useToast } from "../contexts/Toast";
-import RefreshIcon from "../components/RefreshIcon";
-import * as SecureStore from "expo-secure-store";
-import { SELECTED_FAMILY_KEY } from "../lib/constants";
-
-type ListItemProps = {
-  item: FamilyInvitation;
-  index: number;
-};
 
 type InvitationListScreenProps = NativeStackScreenProps<
   StackParamList,
@@ -38,85 +21,12 @@ export default function InvitationListScreen({
   navigation,
 }: InvitationListScreenProps) {
   const theme = useTheme();
-  const toast = useToast();
-  const [invitations, setInvitations] = useState<FamilyInvitation[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      getMyInvitations()
-        .then(setInvitations)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [toast]),
-  );
-
-  const handleAcceptInvite = async (invitationId: string) => {
-    try {
-      const familyId = await acceptInvitation(invitationId);
-      SecureStore.setItem(SELECTED_FAMILY_KEY, familyId);
-      navigation.replace("familydetail", { familyId });
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.danger(e.message);
-      }
-    }
-  };
 
   const renderBackAction = () => (
     <TopNavigationAction
       icon={BackArrowIcon}
       onPress={() => navigation.pop()}
     />
-  );
-
-  const renderRefreshAction = () => (
-    <TopNavigationAction
-      icon={RefreshIcon}
-      onPress={() =>
-        getMyInvitations()
-          .then(setInvitations)
-          .catch((e: Error) => toast.danger(e.message))
-      }
-    />
-  );
-
-  const renderListItemActions = (invitationId: string) => (
-    <View style={{ flexDirection: "row", gap: 6 }}>
-      <Button
-        size="tiny"
-        status="danger"
-        onPress={() => {
-          declineInvitation(invitationId)
-            .then(() =>
-              setInvitations((prev) =>
-                prev.filter(({ id }) => id !== invitationId),
-              ),
-            )
-            .catch((e: Error) => toast.danger(e.message));
-        }}
-      >
-        DECLINE
-      </Button>
-      <Button size="tiny" onPress={() => handleAcceptInvite(invitationId)}>
-        ACCEPT
-      </Button>
-    </View>
-  );
-
-  const renderListItem = ({ item }: ListItemProps) => (
-    <ListItem
-      disabled
-      title={item.familyName}
-      description={`Sent ${formatDate(new Date(item.createdAt))}`}
-      accessoryRight={() => renderListItemActions(item.id)}
-    />
-  );
-
-  const renderListEmpty = () => (
-    <View style={styles.container}>
-      <Text category="p1" appearance="hint" style={{ textAlign: "center" }}>
-        No Pending Invitations.
-      </Text>
-    </View>
   );
 
   return (
@@ -131,16 +41,10 @@ export default function InvitationListScreen({
         title="Invitations"
         alignment="center"
         accessoryLeft={renderBackAction}
-        accessoryRight={renderRefreshAction}
       />
       <Divider />
       <Layout style={styles.layout}>
-        <List
-          data={invitations}
-          renderItem={renderListItem}
-          ItemSeparatorComponent={Divider}
-          ListEmptyComponent={renderListEmpty}
-        />
+        <Text>TODO</Text>
       </Layout>
     </SafeAreaView>
   );

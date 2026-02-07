@@ -6,8 +6,20 @@ import AppNavigator from "./AppNavigator";
 import { ToastProvider } from "./contexts/Toast";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useEffect } from "react";
+import * as SplashScreen from "expo-splash-screen";
+import { SyncProvider } from "./contexts/Sync";
+import { runMigrations } from "./db/migrations";
+import DB from "./db";
+
+SplashScreen.preventAutoHideAsync();
+runMigrations(DB);
 
 export default function App() {
+  useEffect(() => {
+    SplashScreen.hideAsync(); // TODO: put this behind the auth stuff
+  }, []);
+
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
@@ -16,7 +28,9 @@ export default function App() {
           <ApplicationProvider {...eva} theme={eva.dark}>
             <NavigationContainer>
               <ToastProvider>
-                <AppNavigator />
+                <SyncProvider>
+                  <AppNavigator />
+                </SyncProvider>
               </ToastProvider>
             </NavigationContainer>
           </ApplicationProvider>

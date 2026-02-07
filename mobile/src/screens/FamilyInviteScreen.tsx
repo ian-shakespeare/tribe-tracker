@@ -1,60 +1,16 @@
 import {
-  Button,
   Divider,
-  Input,
   Layout,
-  List,
-  ListItem,
   Text,
   TopNavigation,
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useCallback, useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Invitation, User } from "../lib/models";
-import { createInvitation, getPendingInvitations, getUsers } from "../lib";
-import { formatDate, toTitleCase } from "../lib/strings";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
-import { StyleSheet, View } from "react-native";
-import { useToast } from "../contexts/Toast";
-import { useFocusEffect } from "@react-navigation/native";
+import { StyleSheet } from "react-native";
 import BackArrowIcon from "../components/BackArrowIcon";
-import InviteIcon from "../components/InviteIcon";
-
-type ListItemProps = {
-  item: Invitation;
-  index: number;
-};
-
-type ListHeaderProps = {
-  email: string;
-  setEmail: (email: string) => void;
-  onSendInvite: () => void;
-};
-
-function ListHeader({ email, setEmail, onSendInvite }: ListHeaderProps) {
-  return (
-    <View style={styles.header}>
-      <Input
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="email"
-        inputMode="email"
-        style={styles.headerInput}
-      />
-      <Button
-        size="small"
-        accessoryRight={InviteIcon}
-        onPress={onSendInvite}
-      ></Button>
-    </View>
-  );
-}
 
 type FamilyInviteScreenProps = NativeStackScreenProps<
   StackParamList,
@@ -63,68 +19,14 @@ type FamilyInviteScreenProps = NativeStackScreenProps<
 
 export default function FamilyInviteScreen({
   navigation,
-  route,
 }: FamilyInviteScreenProps) {
   const theme = useTheme();
-  const toast = useToast();
-  const [email, setEmail] = useState("");
-  const [users, setUsers] = useState<Map<string, User> | null>(null);
-  const [pendingInvitations, setPendingInvitations] = useState<Invitation[]>(
-    [],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      const familyId = route.params.familyId;
-      getPendingInvitations(familyId)
-        .then(setPendingInvitations)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [route, setPendingInvitations, toast]),
-  );
-
-  useEffect(() => {
-    if (pendingInvitations.length < 1) return;
-
-    getUsers(pendingInvitations.map(({ recipient }) => recipient))
-      .then((u) => setUsers(new Map(u.map((user) => [user.id, user]))))
-      .catch((e: Error) => toast.danger(e.message));
-  }, [pendingInvitations, setUsers, toast]);
-
-  const handleSendInvite = () => {
-    const familyId = route.params.familyId;
-    createInvitation(familyId, email.trim().toLowerCase())
-      .then((invitation) =>
-        setPendingInvitations((prev) => [...prev, invitation]),
-      )
-      .catch((e: Error) => toast.danger(e.message));
-  };
-
-  const renderListItem = ({ item }: ListItemProps) => {
-    const user = users?.get(item.recipient);
-    return (
-      <ListItem
-        title={toTitleCase(
-          `${user?.firstName ?? "unknown"} ${user?.lastName ?? "user"}`,
-        )}
-        description={`Sent ${formatDate(new Date(item.createdAt))}`}
-        style={{ paddingHorizontal: 16 }}
-      />
-    );
-  };
 
   const renderBackAction = () => (
     <TopNavigationAction
       icon={BackArrowIcon}
       onPress={() => navigation.pop()}
     />
-  );
-
-  const renderEmpty = () => (
-    <View style={styles.container}>
-      <Text category="p1" appearance="hint" style={styles.emptyText}>
-        No Pending Invites.
-      </Text>
-    </View>
   );
 
   return (
@@ -142,19 +44,7 @@ export default function FamilyInviteScreen({
       />
       <Divider />
       <Layout style={styles.layout}>
-        <List
-          keyExtractor={({ id }) => String(id)}
-          data={pendingInvitations}
-          renderItem={renderListItem}
-          ListHeaderComponent={
-            <ListHeader
-              email={email}
-              setEmail={setEmail}
-              onSendInvite={handleSendInvite}
-            />
-          }
-          ListEmptyComponent={renderEmpty}
-        />
+        <Text>TODO</Text>
       </Layout>
     </SafeAreaView>
   );

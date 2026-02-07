@@ -51,12 +51,12 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
 
       if (authMode === "register") {
         const data = {
+          email: email.trim().toLowerCase(),
           firstName: firstName.trim().toLowerCase(),
           lastName: lastName.trim().toLowerCase(),
-          email: email.trim().toLowerCase(),
+          avatar: null,
           password: password.trim(),
           passwordConfirm: confirmPassword.trim(),
-          emailVisibility: true,
         };
         await createUser(data);
       }
@@ -65,6 +65,10 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
       navigation.navigate("tabs");
     } catch (e) {
       if (e instanceof Error) {
+        console.error(e.name);
+        console.error(e.message);
+        console.error(e.cause);
+        console.error(e.stack);
         toast.danger(e.message);
       }
     }

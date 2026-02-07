@@ -8,10 +8,9 @@ import {
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useCallback, useState } from "react";
+import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { FamilyDetails, FamilyMember } from "../lib/models";
-import { getFamilyDetails } from "../lib";
+import { db } from "../lib";
 import { formatDate, toTitleCase } from "../lib/strings";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -19,35 +18,70 @@ import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
 import { StyleSheet, View } from "react-native";
 import InviteIcon from "../components/InviteIcon";
-import { useFocusEffect } from "@react-navigation/native";
-
-type ListItemProps = {
-  item: FamilyMember;
-  index: number;
-};
+import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { familiesTable, familyMembersTable, usersTable } from "../db/schema";
+import { eq } from "drizzle-orm";
 
 type FamilyDetailScreenProps = NativeStackScreenProps<
   StackParamList,
   "familydetail"
 >;
 
+type FamilyDetail = {
+  id: string;
+  name: string;
+  members: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    avatar: string | null;
+    joinedAt: string;
+  }[];
+};
+
+type ListItemProps = {
+  item: FamilyDetail["members"][number];
+  index: number;
+};
+
 export default function FamilyDetailScreen({
   navigation,
   route,
 }: FamilyDetailScreenProps) {
+  const { familyId } = route.params;
+
   const theme = useTheme();
   const toast = useToast();
-  const [familyDetails, setFamilyDetails] = useState<FamilyDetails | null>(
-    null,
+  const { data, error } = useLiveQuery(
+    db
+      .select()
+      .from(familiesTable)
+      .innerJoin(
+        familyMembersTable,
+        eq(familiesTable.id, familyMembersTable.family),
+      )
+      .innerJoin(usersTable, eq(familyMembersTable.user, usersTable.id))
+      .where(eq(familiesTable.id, familyId)),
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      const familyId = route.params.familyId;
-      getFamilyDetails(familyId)
-        .then(setFamilyDetails)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [route, setFamilyDetails, toast]),
+  // TODO: render error
+
+  const familyDetails = data.reduce<FamilyDetail>(
+    ({ members }, curr) => {
+      return {
+        id: curr.families.id,
+        name: curr.families.name,
+        members: [
+          ...members,
+          { ...curr.users, joinedAt: curr.familyMembers.createdAt },
+        ],
+      };
+    },
+    {
+      id: "",
+      name: "",
+      members: [],
+    },
   );
 
   const renderListItem = ({ item }: ListItemProps) => (

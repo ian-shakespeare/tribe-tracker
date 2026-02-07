@@ -1,13 +1,8 @@
-import { useCallback, useState } from "react";
+import { useEffect } from "react";
 import PlatformMap from "../components/PlatformMap";
-import { Family, MemberLocation } from "../lib/models";
 import { toTitleCase } from "../lib/strings";
-import { useFocusEffect } from "@react-navigation/native";
-import { createLocation, getFamily, getUserLocations } from "../lib";
+import { db } from "../lib";
 import { useToast } from "../contexts/Toast";
-import * as SecureStore from "expo-secure-store";
-import * as Location from "expo-location";
-import { SELECTED_FAMILY_KEY } from "../lib/constants";
 import { StyleSheet } from "react-native";
 import {
   Divider,
@@ -18,60 +13,36 @@ import {
 } from "@ui-kitten/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import RefreshIcon from "../components/RefreshIcon";
-import { Coordinates } from "expo-maps";
+import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { locationsTable, usersTable } from "../db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export default function MapScreen() {
   const theme = useTheme();
   const toast = useToast();
-  const [myCoords, setMyCoords] = useState<Coordinates | null>(null);
-  const [family, setFamily] = useState<Family | null>(null);
-  const [locations, setLocations] = useState<MemberLocation[]>([]);
-
-  useFocusEffect(
-    useCallback(() => {
-      Location.requestForegroundPermissionsAsync()
-        .then(({ granted }) => {
-          if (!granted) throw new Error("Location permissions required.");
-
-          return Location.getCurrentPositionAsync({
-            accuracy: Location.LocationAccuracy.Lowest,
-          });
-        })
-        .then(({ coords }) => {
-          setMyCoords(coords);
-          return createLocation(coords.latitude, coords.longitude);
-        })
-        .catch((e: Error) => toast.danger(e.message));
-
-      const familyId = SecureStore.getItem(SELECTED_FAMILY_KEY);
-      if (!familyId) return;
-
-      getFamily(familyId).then(setFamily);
-
-      getUserLocations(familyId)
-        .then(setLocations)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [toast]),
+  const { data, error } = useLiveQuery(
+    db
+      .select({
+        coordinates: locationsTable.coordinates,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        recordedAt: sql<string>`max(${locationsTable.createdAt})`.mapWith(
+          String,
+        ),
+      })
+      .from(locationsTable)
+      .innerJoin(usersTable, eq(locationsTable.user, usersTable.id))
+      .groupBy(sql`${usersTable.id}`),
   );
 
-  const handleRefresh = async () => {
-    try {
-      const { coords } = await Location.getCurrentPositionAsync({
-        accuracy: Location.LocationAccuracy.Lowest,
-      });
-      await createLocation(coords.latitude, coords.longitude);
-
-      if (!family) return;
-      setLocations(await getUserLocations(family.id));
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.danger(e.message);
-      }
-    }
-  };
+  // TODO: post user location somewhere
+  // TODO: render error
 
   const renderMenuActions = () => (
-    <TopNavigationAction icon={RefreshIcon} onPress={handleRefresh} />
+    <TopNavigationAction
+      icon={RefreshIcon}
+      onPress={() => console.log("TODO")}
+    />
   );
 
   return (
@@ -83,19 +54,18 @@ export default function MapScreen() {
       ]}
     >
       <TopNavigation
-        title={family?.name ?? "No Select Family"}
+        title="TODO Baby!"
         alignment="center"
         accessoryRight={renderMenuActions}
       />
       <Divider />
       <Layout style={styles.layout}>
         <PlatformMap
-          cameraPosition={!myCoords ? undefined : { coordinates: myCoords }}
-          markers={locations.map(({ firstName, lastName, coordinates }) => ({
+          markers={data.map(({ firstName, lastName, coordinates }) => ({
             title: toTitleCase(`${firstName} ${lastName}`),
             coordinates: {
-              latitude: coordinates.lat,
-              longitude: coordinates.lon,
+              latitude: (coordinates as { lat: number }).lat,
+              longitude: (coordinates as { lon: number }).lon,
             },
           }))}
         />

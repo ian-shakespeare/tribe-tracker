@@ -8,10 +8,10 @@ import {
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Family } from "../lib/models";
-import { getFamilies, leaveFamily } from "../lib";
+import { db } from "../lib";
 import { toTitleCase } from "../lib/strings";
 import PlusIcon from "../components/PlusIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -19,11 +19,9 @@ import { StackParamList } from "../AppNavigator";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useToast } from "../contexts/Toast";
 import PeopleIcon from "../components/PeopleIcon";
-import { useFocusEffect } from "@react-navigation/native";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import * as SecureStore from "expo-secure-store";
-import { SELECTED_FAMILY_KEY } from "../lib/constants";
-import StarIcon from "../components/StarIcon";
+import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { familiesTable } from "../db/schema";
 
 type ListItemProps = {
   item: Family;
@@ -39,40 +37,18 @@ export default function FamilyListScreen({
   navigation,
 }: FamilyListScreenProps) {
   const theme = useTheme();
-  const toast = useToast();
-  const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null);
-  const [families, setFamilies] = useState<Family[]>([]);
+  const { data, error } = useLiveQuery(db.select().from(familiesTable));
 
-  useFocusEffect(
-    useCallback(() => {
-      SecureStore.getItemAsync(SELECTED_FAMILY_KEY).then(setSelectedFamilyId);
+  useEffect(() => {
+    console.log(JSON.stringify(data));
+  }, [data]);
 
-      getFamilies()
-        .then(setFamilies)
-        .catch((e: Error) => toast.danger(e.message));
-    }, [toast, setFamilies]),
-  );
-
-  const handleSelectFamily = (familyId: string) => {
-    SecureStore.setItem(SELECTED_FAMILY_KEY, familyId);
-    setSelectedFamilyId(familyId);
-  };
-
-  const handleLeaveFamily = async (familyId: string) => {
-    try {
-      await leaveFamily(familyId);
-      setFamilies((prev) => prev.filter(({ id }) => id !== familyId));
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.danger(e.message);
-      }
-    }
-  };
+  // TODO: render error in a meaningful way
 
   const renderSwipeAction = (familyId: string) => (
     <View style={{ flexDirection: "row" }}>
       <Pressable
-        onPress={() => handleSelectFamily(familyId)}
+        onPress={() => console.log("TODO: select family")}
         style={({ pressed }) => ({
           backgroundColor: theme["color-primary-default"],
           paddingHorizontal: 16,
@@ -91,7 +67,7 @@ export default function FamilyListScreen({
               { text: "Cancel", onPress: () => {} },
               {
                 text: "OK",
-                onPress: () => handleLeaveFamily(familyId),
+                onPress: () => console.log("TODO: leave family"),
                 isPreferred: true,
               },
             ],
@@ -115,7 +91,6 @@ export default function FamilyListScreen({
         title={toTitleCase(item.name)}
         style={{ paddingHorizontal: 16 }}
         accessoryLeft={PeopleIcon}
-        accessoryRight={item.id === selectedFamilyId ? StarIcon : undefined}
         onPress={() => navigation.push("familydetail", { familyId: item.id })}
       />
     </Swipeable>
@@ -146,7 +121,7 @@ export default function FamilyListScreen({
       />
       <Divider />
       <Layout style={styles.layout}>
-        {families.length < 1 ? (
+        {data.length < 1 ? (
           <View style={styles.container}>
             <Text category="h6" style={styles.text}>
               You don&apos;t have a family yet.{"\n"}But you can{" "}
@@ -167,7 +142,7 @@ export default function FamilyListScreen({
         ) : (
           <List
             keyExtractor={({ id }) => String(id)}
-            data={families}
+            data={data}
             renderItem={renderListItem}
             ItemSeparatorComponent={Divider}
           />
