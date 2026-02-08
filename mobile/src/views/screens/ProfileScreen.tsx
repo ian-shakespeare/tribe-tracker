@@ -11,36 +11,37 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { StyleSheet, View } from "react-native";
-import { useEffect } from "react";
-import { db, getMyUserId, signOut } from "../lib";
 import { useToast } from "../contexts/Toast";
-import { formatDate } from "../lib/strings";
 import AvatarHero from "../components/AvatarHero";
 import BellIcon from "../components/BellIcon";
 import PencilIcon from "../components/PencilIcon";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { usersTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { useLiveQuery } from "../../db/liveQuery";
+import { getUser } from "../../models/user";
+import * as SecureStore from "expo-secure-store";
+import { signOut } from "../../controllers/api";
+import { formatDate } from "../../utils/strings";
 
 const AVATAR_SIZE = 200;
 
 type ProfileScreenProps = NativeStackScreenProps<StackParamList, "profile">;
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const userId = getMyUserId();
   const theme = useTheme();
   const toast = useToast();
 
-  const { data, error } = useLiveQuery(
-    db.select().from(usersTable).where(eq(usersTable.id, userId)),
-  );
+  const query = useLiveQuery(async () => {
+    const userId = await SecureStore.getItemAsync("MY_USER_ID");
+    if (!userId) {
+      toast.danger("Failed to get my user ID.");
+      return null;
+    }
 
-  // TODO: render `error` if exists
-
-  const user = data.at(0) ?? null;
+    return await getUser(userId);
+  });
 
   const handleSignOut = () => {
     signOut();
+    SecureStore.setItem("MY_USER_ID", "");
     navigation.replace("signin");
   };
 
@@ -76,26 +77,30 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
       <Layout style={styles.layout}>
         <View style={styles.container}>
           <View style={styles.content}>
-            {!user ? (
+            {query.isLoading ? (
               <Text category="p1" appearance="hint" style={styles.text}>
                 Loading...
+              </Text>
+            ) : !query.result ? (
+              <Text category="p1" appearance="hint" style={styles.text}>
+                No User Found
               </Text>
             ) : (
               <View>
                 <AvatarHero
                   size={AVATAR_SIZE}
-                  avatar={user.avatar}
-                  firstName={user.firstName}
-                  lastName={user.lastName}
+                  avatar={query.result.avatar}
+                  firstName={query.result.firstName}
+                  lastName={query.result.lastName}
                 />
                 <Text category="h1" style={styles.nameText}>
-                  {`${user.firstName} ${user.lastName}`}
+                  {`${query.result.firstName} ${query.result.lastName}`}
                 </Text>
                 <Text category="p1" style={styles.text}>
-                  {user.email}
+                  {query.result.email}
                 </Text>
                 <Text category="p1" appearance="hint" style={styles.text}>
-                  Joined {formatDate(new Date(user.createdAt))}
+                  Joined {formatDate(new Date(query.result.createdAt))}
                 </Text>
               </View>
             )}

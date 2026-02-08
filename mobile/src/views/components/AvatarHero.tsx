@@ -1,8 +1,8 @@
-import type { User } from "../lib/models";
-import { getAvatarUri } from "../lib";
+import type { User } from "../../models/user";
 import { StyleSheet, View } from "react-native";
 import { Text, useTheme } from "@ui-kitten/components";
 import { Image } from "expo-image";
+import * as API from "../../controllers/api";
 
 type AvatarHeroProps = Pick<User, "avatar" | "firstName" | "lastName"> & {
   size: number;
@@ -15,7 +15,7 @@ export default function AvatarHero({
   size,
 }: AvatarHeroProps) {
   const theme = useTheme();
-  const uri = getAvatarUri(avatar ?? "");
+  const uri = API.getAvatarUri(avatar ?? "");
 
   return (
     <View

@@ -11,11 +11,14 @@ import {
 import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createFamily } from "../lib";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
+import * as API from "../../controllers/api";
+import { createFamily } from "../../models/family";
+import * as Crypto from "expo-crypto";
+import { createFamilyMember } from "../../models/familyMember";
 
 type FamilyNewScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
 
@@ -24,13 +27,38 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
   const toast = useToast();
   const [name, setName] = useState("");
 
-  const handleSubmit = useCallback(
-    () =>
-      createFamily(name)
-        .then(({ id }) => navigation.replace("familydetail", { familyId: id }))
-        .catch((e: Error) => toast.danger(e.message)),
-    [name, navigation, toast],
-  );
+  const handleSubmit = async () => {
+    const res = await API.createFamily({
+      name,
+      code: Crypto.randomUUID().replaceAll("-", ""),
+    });
+    if (!res.success) {
+      toast.danger(res.error.message);
+      return;
+    }
+
+    const { family, familyMember } = res.res;
+
+    const created = await createFamily({
+      ...family,
+      createdAt: new Date(family.createdAt),
+      updatedAt: new Date(family.updatedAt),
+    });
+    if (!created.success) {
+      toast.danger(created.error.message);
+      return;
+    }
+
+    const { success } = await createFamilyMember({
+      ...familyMember,
+      createdAt: new Date(familyMember.createdAt),
+    });
+    if (!success) {
+      toast.danger("Failed to create local family member.");
+    }
+
+    navigation.replace("familydetail", { familyId: created.family.id });
+  };
 
   const renderMenuActions = useCallback(
     () => (

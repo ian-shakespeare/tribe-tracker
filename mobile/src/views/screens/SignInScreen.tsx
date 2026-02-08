@@ -3,16 +3,19 @@ import { useEffect, useState } from "react";
 import { View } from "react-native";
 import SecureInput from "../components/SecureInput";
 import {
+  ApiUser,
   getBaseUrl,
   isSignedIn,
   refreshAuth,
-  createUser,
+  registerUser,
   saveBaseUrl,
   signIn,
-} from "../lib";
+} from "../../controllers/api";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
+import { upsertUser } from "../../models/user";
+import * as SecureStore from "expo-secure-store";
 
 type SignInScreenProps = NativeStackScreenProps<StackParamList, "signin">;
 
@@ -49,19 +52,45 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
         saveBaseUrl(url);
       }
 
+      let apiUser: ApiUser;
       if (authMode === "register") {
         const data = {
           email: email.trim().toLowerCase(),
           firstName: firstName.trim().toLowerCase(),
           lastName: lastName.trim().toLowerCase(),
-          avatar: null,
           password: password.trim(),
           passwordConfirm: confirmPassword.trim(),
         };
-        await createUser(data);
+        const res = await registerUser(data);
+        if (!res.success) {
+          toast.danger(res.error.message);
+          return;
+        }
+
+        apiUser = res.user;
+      } else {
+        const res = await signIn(email.trim().toLowerCase(), password);
+        if (!res.success) {
+          toast.danger(res.error.message);
+          return;
+        }
+
+        apiUser = res.user;
       }
 
-      await signIn(email.trim().toLowerCase(), password);
+      const created = await upsertUser({
+        ...apiUser,
+        createdAt: new Date(apiUser.createdAt),
+        updatedAt: new Date(apiUser.updatedAt),
+      });
+
+      if (!created.success) {
+        toast.danger(created.error.message);
+        return;
+      }
+
+      await SecureStore.setItemAsync("MY_USER_ID", apiUser.id);
+
       navigation.navigate("tabs");
     } catch (e) {
       if (e instanceof Error) {

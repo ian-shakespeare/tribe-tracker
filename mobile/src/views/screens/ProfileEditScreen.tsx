@@ -15,17 +15,16 @@ import {
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useCallback, useState } from "react";
-import { useFocusEffect } from "@react-navigation/native";
-import { db, getAvatarUri, getMyUserId, updateMe } from "../lib";
+import { useState } from "react";
 import { useToast } from "../contexts/Toast";
-import { User } from "../lib/models";
-import { toTitleCase } from "../lib/strings";
 import * as ImagePicker from "expo-image-picker";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { Image } from "expo-image";
-import { usersTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { getUser, updateUser, User } from "../../models/user";
+import { useLiveQuery } from "../../db/liveQuery";
+import * as SecureStore from "expo-secure-store";
+import * as API from "../../controllers/api";
+import { toTitleCase } from "../../utils/strings";
 
 const AVATAR_SIZE = 200;
 
@@ -40,29 +39,26 @@ export default function ProfileEditScreen({
   const theme = useTheme();
   const toast = useToast();
   const { bottom } = useSafeAreaInsets();
-  const [user, setUser] = useState<User | undefined>();
   const [avatar, setAvatar] = useState<string | undefined>();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
-  useFocusEffect(
-    useCallback(() => {
-      const userId = getMyUserId();
-      db.select()
-        .from(usersTable)
-        .where(eq(usersTable.id, userId))
-        .then(([u]) => {
-          setUser(u);
-          setFirstName(u.firstName);
-          setLastName(u.lastName);
+  const query = useLiveQuery(async () => {
+    const userId = await SecureStore.getItemAsync("MY_USER_ID");
+    if (!userId) {
+      toast.danger("Failed to get my user ID.");
+      return null;
+    }
 
-          if (u.avatar) {
-            setAvatar(getAvatarUri(u.avatar));
-          }
-        })
-        .catch((e: Error) => toast.danger(e.message));
-    }, [toast]),
-  );
+    const storedUser = await getUser(userId);
+    if (storedUser) {
+      setAvatar(storedUser.avatar);
+      setFirstName(storedUser.firstName);
+      setLastName(storedUser.lastName);
+    }
+
+    return storedUser;
+  });
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -81,11 +77,26 @@ export default function ProfileEditScreen({
 
   const handleSubmit = async () => {
     try {
-      await updateMe({
+      if (query.isLoading) {
+        throw new Error("User has not loaded.");
+      }
+
+      const myUserId = await SecureStore.getItemAsync("MY_USER_ID");
+      if (!myUserId) {
+        throw new Error("Failed to find my user ID.");
+      }
+
+      const updated = await API.updateMe({
         firstName: firstName.trim().toLowerCase(),
         lastName: lastName.trim().toLowerCase(),
-        avatar: avatar === user?.avatar ? undefined : avatar,
+        avatar: avatar === query.result?.avatar ? undefined : avatar,
       });
+
+      const { success } = await updateUser(myUserId, updated);
+      if (!success) {
+        throw new Error("Failed to update local user. Please re-sync.");
+      }
+
       navigation.pop();
     } catch (e) {
       if (e instanceof Error) {

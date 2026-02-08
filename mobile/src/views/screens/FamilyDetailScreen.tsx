@@ -8,39 +8,27 @@ import {
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { db } from "../lib";
-import { formatDate, toTitleCase } from "../lib/strings";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
-import { useToast } from "../contexts/Toast";
 import { StyleSheet, View } from "react-native";
 import InviteIcon from "../components/InviteIcon";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { familiesTable, familyMembersTable, usersTable } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { useLiveQuery } from "../../db/liveQuery";
+import {
+  FamilyMemberUser,
+  getFamily,
+  getFamilyMembers,
+} from "../../models/family";
+import { formatDate, toTitleCase } from "../../utils/strings";
 
 type FamilyDetailScreenProps = NativeStackScreenProps<
   StackParamList,
   "familydetail"
 >;
 
-type FamilyDetail = {
-  id: string;
-  name: string;
-  members: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    avatar: string | null;
-    joinedAt: string;
-  }[];
-};
-
 type ListItemProps = {
-  item: FamilyDetail["members"][number];
+  item: FamilyMemberUser;
   index: number;
 };
 
@@ -51,38 +39,14 @@ export default function FamilyDetailScreen({
   const { familyId } = route.params;
 
   const theme = useTheme();
-  const toast = useToast();
-  const { data, error } = useLiveQuery(
-    db
-      .select()
-      .from(familiesTable)
-      .innerJoin(
-        familyMembersTable,
-        eq(familiesTable.id, familyMembersTable.family),
-      )
-      .innerJoin(usersTable, eq(familyMembersTable.user, usersTable.id))
-      .where(eq(familiesTable.id, familyId)),
-  );
+  const query = useLiveQuery(async () => {
+    const [family, members] = await Promise.all([
+      getFamily(familyId),
+      getFamilyMembers(familyId),
+    ]);
 
-  // TODO: render error
-
-  const familyDetails = data.reduce<FamilyDetail>(
-    ({ members }, curr) => {
-      return {
-        id: curr.families.id,
-        name: curr.families.name,
-        members: [
-          ...members,
-          { ...curr.users, joinedAt: curr.familyMembers.createdAt },
-        ],
-      };
-    },
-    {
-      id: "",
-      name: "",
-      members: [],
-    },
-  );
+    return { family, members };
+  });
 
   const renderListItem = ({ item }: ListItemProps) => (
     <ListItem
@@ -127,7 +91,11 @@ export default function FamilyDetailScreen({
       ]}
     >
       <TopNavigation
-        title={toTitleCase(familyDetails?.name ?? "Family Detail")}
+        title={
+          query.isLoading
+            ? "Loading..."
+            : toTitleCase(query.result.family?.name ?? "Unknown")
+        }
         alignment="center"
         accessoryLeft={renderBackAction}
         accessoryRight={renderInviteAction}
@@ -135,7 +103,7 @@ export default function FamilyDetailScreen({
       <Divider />
       <Layout style={styles.layout}>
         <List
-          data={familyDetails?.members ?? []}
+          data={query.isLoading ? [] : query.result.members}
           renderItem={renderListItem}
           ListEmptyComponent={renderEmpty}
         />

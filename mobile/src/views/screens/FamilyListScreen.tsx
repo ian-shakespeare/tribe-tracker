@@ -8,20 +8,17 @@ import {
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Family } from "../lib/models";
-import { db } from "../lib";
-import { toTitleCase } from "../lib/strings";
 import PlusIcon from "../components/PlusIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
-import { useToast } from "../contexts/Toast";
 import PeopleIcon from "../components/PeopleIcon";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
-import { familiesTable } from "../db/schema";
+import { useLiveQuery } from "../../db/liveQuery";
+import { Family, getAllFamilies } from "../../models/family";
+import { toTitleCase } from "../../utils/strings";
 
 type ListItemProps = {
   item: Family;
@@ -37,15 +34,9 @@ export default function FamilyListScreen({
   navigation,
 }: FamilyListScreenProps) {
   const theme = useTheme();
-  const { data, error } = useLiveQuery(db.select().from(familiesTable));
+  const query = useLiveQuery(getAllFamilies);
 
-  useEffect(() => {
-    console.log(JSON.stringify(data));
-  }, [data]);
-
-  // TODO: render error in a meaningful way
-
-  const renderSwipeAction = (familyId: string) => (
+  const renderSwipeAction = () => (
     <View style={{ flexDirection: "row" }}>
       <Pressable
         onPress={() => console.log("TODO: select family")}
@@ -86,7 +77,7 @@ export default function FamilyListScreen({
   );
 
   const renderListItem = ({ item }: ListItemProps) => (
-    <Swipeable renderRightActions={() => renderSwipeAction(item.id)}>
+    <Swipeable renderRightActions={renderSwipeAction}>
       <ListItem
         title={toTitleCase(item.name)}
         style={{ paddingHorizontal: 16 }}
@@ -121,7 +112,9 @@ export default function FamilyListScreen({
       />
       <Divider />
       <Layout style={styles.layout}>
-        {data.length < 1 ? (
+        {query.isLoading ? (
+          <Text>Loading</Text>
+        ) : query.result.length < 1 ? (
           <View style={styles.container}>
             <Text category="h6" style={styles.text}>
               You don&apos;t have a family yet.{"\n"}But you can{" "}
@@ -142,7 +135,7 @@ export default function FamilyListScreen({
         ) : (
           <List
             keyExtractor={({ id }) => String(id)}
-            data={data}
+            data={query.result}
             renderItem={renderListItem}
             ItemSeparatorComponent={Divider}
           />

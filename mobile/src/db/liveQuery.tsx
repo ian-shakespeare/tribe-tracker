@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
 import * as SQLite from "expo-sqlite";
 
-type LiveQueryResult<T> =
+export function useLiveQuery<T>(query: () => Promise<T>):
   | {
       isLoading: true;
     }
   | {
       isLoading: false;
       result: T;
-    };
-
-export function useLiveQuery<T>(query: () => Promise<T>): LiveQueryResult<T> {
+    } {
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState<T | null>(null);
+
+  useEffect(() => {
+    query().then((res) => {
+      setResult(res);
+      setIsLoading(false);
+    });
+    // eslint-disable-next-line
+  }, [setIsLoading, setResult]);
 
   useEffect(() => {
     const listener = SQLite.addDatabaseChangeListener(() => {
