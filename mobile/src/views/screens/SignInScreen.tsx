@@ -87,8 +87,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
       });
 
       if (!created.success) {
-        toast.danger(created.error.message);
-        return;
+        throw created.error;
       }
 
       await SecureStore.setItemAsync("MY_USER_ID", apiUser.id).then(sync);
@@ -96,10 +95,6 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
       navigation.navigate("tabs");
     } catch (e) {
       if (e instanceof Error) {
-        console.error(e.name);
-        console.error(e.message);
-        console.error(e.cause);
-        console.error(e.stack);
         toast.danger(e.message);
       }
     }

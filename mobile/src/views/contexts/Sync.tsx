@@ -33,15 +33,12 @@ type SyncProviderProps = {
 };
 
 async function sync(lastSyncedAt: Date) {
-  console.log("sync");
   if (!API.isSignedIn()) {
     throw new Error("Not authenticated.");
   }
 
-  console.log("getting sync data");
   const { users, families, familyMembers, locations } =
     await API.getSyncData(lastSyncedAt);
-  console.log("got sync data");
 
   const { updatedUsers, deletedUserIDs } = users.reduce<{
     updatedUsers: API.ApiUser[];

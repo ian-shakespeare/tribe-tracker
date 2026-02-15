@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as SQLite from "expo-sqlite";
+import { useFocusEffect } from "@react-navigation/native";
 
 export function useLiveQuery<T>(query: () => Promise<T>):
   | {
@@ -12,26 +13,30 @@ export function useLiveQuery<T>(query: () => Promise<T>):
   const [isLoading, setIsLoading] = useState(true);
   const [result, setResult] = useState<T | null>(null);
 
-  useEffect(() => {
-    query().then((res) => {
-      setResult(res);
-      setIsLoading(false);
-    });
-    // eslint-disable-next-line
-  }, [setIsLoading, setResult]);
-
-  useEffect(() => {
-    const listener = SQLite.addDatabaseChangeListener(() => {
+  useFocusEffect(
+    useCallback(() => {
       query().then((res) => {
         setResult(res);
         setIsLoading(false);
       });
-    });
+      // eslint-disable-next-line
+    }, [setIsLoading, setResult]),
+  );
 
-    return () => {
-      listener.remove();
-    };
-  }, [setIsLoading, setResult, query]);
+  useFocusEffect(
+    useCallback(() => {
+      const listener = SQLite.addDatabaseChangeListener(() => {
+        query().then((res) => {
+          setResult(res);
+          setIsLoading(false);
+        });
+      });
+
+      return () => {
+        listener.remove();
+      };
+    }, [setIsLoading, setResult, query]),
+  );
 
   if (isLoading) {
     return { isLoading: true };

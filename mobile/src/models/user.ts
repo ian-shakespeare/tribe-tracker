@@ -20,21 +20,24 @@ export async function upsertUser(
     email,
     firstName,
     lastName,
+    avatar,
     createdAt,
     updatedAt
   ) VALUES (
-    ?, ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?, ?
   )
   ON CONFLICT (id)
   DO UPDATE SET
     email = email,
     firstName = firstName,
     lastName = lastName,
+    avatar = avatar,
     updatedAt = updatedAt
   RETURNING id,
     email,
     firstName,
     lastName,
+    avatar,
     createdAt,
     updatedAt
   `;
@@ -44,6 +47,7 @@ export async function upsertUser(
     email: string;
     firstName: string;
     lastName: string;
+    avatar: string;
     createdAt: string;
     updatedAt: string;
   }>(
@@ -52,6 +56,7 @@ export async function upsertUser(
     user.email,
     user.firstName,
     user.lastName,
+    user.avatar ?? null,
     user.createdAt.toISOString(),
     user.updatedAt.toISOString(),
   );
@@ -168,6 +173,7 @@ export async function getUserLocations(): Promise<UserLocation[]> {
   FROM latest_locations ll
   JOIN users u
     ON ll.user = u.id
+  ORDER BY recordedAt DESC
   `;
 
   const records = await DB.getAllAsync<{

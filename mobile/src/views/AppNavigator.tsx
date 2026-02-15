@@ -9,11 +9,9 @@ import SignInScreen from "./screens/SignInScreen";
 import FamilyNewScreen from "./screens/FamilyNewScreen";
 import FamilyListScreen from "./screens/FamilyListScreen";
 import FamilyDetailScreen from "./screens/FamilyDetailScreen";
-import FamilyInviteScreen from "./screens/FamilyInviteScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import PeopleIcon from "./components/PeopleIcon";
 import PersonIcon from "./components/PersonIcon";
-import InvitationListScreen from "./screens/InvitationListScreen";
 import PostListScreen from "./screens/PostListScreen";
 import ImageIcon from "./components/ImageIcon";
 import GlobeIcon from "./components/GlobeIcon";
@@ -26,10 +24,8 @@ export type StackParamList = {
   signin: undefined;
   familynew: undefined;
   familydetail: { familyId: string };
-  familyinvite: { familyId: string };
   tabs: undefined;
   profile: undefined;
-  invitationlist: undefined;
   postlist: undefined;
   profileedit: undefined;
   settings: undefined;
@@ -70,8 +66,6 @@ export default function AppNavigator() {
       <Stack.Screen name="signin" component={SignInScreen} />
       <Stack.Screen name="familynew" component={FamilyNewScreen} />
       <Stack.Screen name="familydetail" component={FamilyDetailScreen} />
-      <Stack.Screen name="familyinvite" component={FamilyInviteScreen} />
-      <Stack.Screen name="invitationlist" component={InvitationListScreen} />
       <Stack.Screen name="profileedit" component={ProfileEditScreen} />
       <Stack.Screen name="settings" component={SettingsScreen} />
       <Stack.Screen name="tabs" component={TabNavigator} />

@@ -21,6 +21,17 @@ export default function MapScreen() {
               },
             }))
       }
+      cameraPosition={
+        query.isLoading || query.result.length < 1
+          ? undefined
+          : {
+              coordinates: {
+                latitude: query.result[0].coordinates.lat,
+                longitude: query.result[0].coordinates.lon,
+              },
+              zoom: 7,
+            }
+      }
     />
   );
 }
