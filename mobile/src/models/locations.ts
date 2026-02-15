@@ -32,3 +32,7 @@ export async function createLocations(locations: Location[]) {
 
   await statement.finalizeAsync();
 }
+
+export async function deleteAllLocations() {
+  await DB.runAsync("DELETE FROM locations");
+}

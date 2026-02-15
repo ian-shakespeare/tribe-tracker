@@ -16,8 +16,8 @@ export default function MapScreen() {
           : query.result.map(({ firstName, lastName, coordinates }) => ({
               title: toTitleCase(`${firstName} ${lastName}`),
               coordinates: {
-                latitude: (coordinates as { lat: number }).lat,
-                longitude: (coordinates as { lon: number }).lon,
+                latitude: coordinates.lat,
+                longitude: coordinates.lon,
               },
             }))
       }

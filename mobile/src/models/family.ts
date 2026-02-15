@@ -202,3 +202,7 @@ export async function deleteFamilies(ids: string[]) {
 
   await statement.finalizeAsync();
 }
+
+export async function deleteAllFamilies() {
+  await DB.runAsync("DELETE FROM families");
+}

@@ -40,10 +40,12 @@ export default function FamilyDetailScreen({
 
   const theme = useTheme();
   const query = useLiveQuery(async () => {
+    console.log("running");
     const [family, members] = await Promise.all([
       getFamily(familyId),
       getFamilyMembers(familyId),
     ]);
+    console.log({ members });
 
     return { family, members };
   });

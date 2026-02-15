@@ -175,6 +175,7 @@ type ApiLocation = Omit<Location, "createdAt"> & {
 type SyncResponse = {
   users: ApiUser[];
   families: ApiFamily[];
+  familyMembers: ApiFamilyMember[];
   locations: ApiLocation[];
 };
 

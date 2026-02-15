@@ -56,3 +56,33 @@ export async function createFamilyMember(
     },
   };
 }
+
+export async function createFamilyMembers(familyMembers: FamilyMember[]) {
+  const statement = await DB.prepareAsync(`
+  INSERT INTO familyMembers (
+    id,
+    user,
+    family,
+    createdAt
+  ) VALUES (
+    $id, $user, $family, $createdAt
+  )
+  `);
+
+  await Promise.all(
+    familyMembers.map(({ id, user, family, createdAt }) =>
+      statement.executeAsync({
+        $id: id,
+        $user: user,
+        $family: family,
+        $createdAt: createdAt.toISOString(),
+      }),
+    ),
+  );
+
+  await statement.finalizeAsync();
+}
+
+export async function deleteAllFamilyMembers() {
+  await DB.runAsync("DELETE FROM familyMembers");
+}

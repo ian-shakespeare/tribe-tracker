@@ -10,13 +10,18 @@ import * as API from "../../controllers/api";
 import { deleteUsers, upsertUsers } from "../../models/user";
 import { deleteFamilies, upsertFamilies } from "../../models/family";
 import { createLocations } from "../../models/locations";
+import { createFamilyMembers } from "../../models/familyMember";
 
 const SyncContext = createContext<{
   lastSyncedAt: Date;
   sync: () => Promise<void>;
+  resetSync: () => void;
 }>({
   lastSyncedAt: new Date(0),
   sync: () => {
+    throw new Error("Uninitialized.");
+  },
+  resetSync: () => {
     throw new Error("Uninitialized.");
   },
 });
@@ -30,12 +35,12 @@ type SyncProviderProps = {
 async function sync(lastSyncedAt: Date) {
   console.log("sync");
   if (!API.isSignedIn()) {
-    console.log("not signed in");
-    return;
+    throw new Error("Not authenticated.");
   }
 
   console.log("getting sync data");
-  const { users, families, locations } = await API.getSyncData(lastSyncedAt);
+  const { users, families, familyMembers, locations } =
+    await API.getSyncData(lastSyncedAt);
   console.log("got sync data");
 
   const { updatedUsers, deletedUserIDs } = users.reduce<{
@@ -84,6 +89,13 @@ async function sync(lastSyncedAt: Date) {
     })),
   );
 
+  await createFamilyMembers(
+    familyMembers.map((familyMember) => ({
+      ...familyMember,
+      createdAt: new Date(familyMember.createdAt),
+    })),
+  );
+
   await createLocations(
     locations.map((location) => ({
       ...location,
@@ -92,8 +104,9 @@ async function sync(lastSyncedAt: Date) {
   );
 }
 
-const storedLastSyncedAt = new Date(SecureStore.getItem("LAST_SYNCED_AT") ?? 0);
-
+const storedLastSyncedAt = !SecureStore.getItem("LAST_SYNCED_AT")
+  ? new Date(0)
+  : new Date(SecureStore.getItem("LAST_SYNCED_AT")!);
 export const SyncProvider = ({ children }: SyncProviderProps) => {
   const [lastSyncedAt, setLastSyncedAt] = useState(storedLastSyncedAt);
 
@@ -102,14 +115,22 @@ export const SyncProvider = ({ children }: SyncProviderProps) => {
     SecureStore.setItem("LAST_SYNCED_AT", d.toISOString());
   };
 
+  const resetSync = () => {
+    setLastSyncedAt(new Date(0));
+    SecureStore.setItem("LAST_SYNCED_AT", "");
+  };
+
   useEffect(() => {
-    sync(storedLastSyncedAt).then(() => updateLastSyncedAt(new Date()));
+    sync(storedLastSyncedAt)
+      .then(() => updateLastSyncedAt(new Date()))
+      .catch(console.warn);
   }, [setLastSyncedAt]);
 
   return (
     <SyncContext.Provider
       value={{
         lastSyncedAt,
+        resetSync,
         sync: () =>
           sync(lastSyncedAt).then(() => updateLastSyncedAt(new Date())),
       }}

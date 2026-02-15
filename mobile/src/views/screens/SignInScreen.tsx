@@ -16,12 +16,14 @@ import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
 import { upsertUser } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
+import { useSync } from "../contexts/Sync";
 
 type SignInScreenProps = NativeStackScreenProps<StackParamList, "signin">;
 
 export default function SignInScreen({ navigation }: SignInScreenProps) {
   const theme = useTheme();
   const toast = useToast();
+  const { sync } = useSync();
 
   const [authMode, setAuthMode] = useState<"sign-in" | "register">("sign-in");
   const [firstName, setFirstName] = useState("");
@@ -89,7 +91,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
         return;
       }
 
-      await SecureStore.setItemAsync("MY_USER_ID", apiUser.id);
+      await SecureStore.setItemAsync("MY_USER_ID", apiUser.id).then(sync);
 
       navigation.navigate("tabs");
     } catch (e) {

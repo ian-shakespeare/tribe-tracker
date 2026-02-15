@@ -13,13 +13,13 @@ import { StackParamList } from "../AppNavigator";
 import { StyleSheet, View } from "react-native";
 import { useToast } from "../contexts/Toast";
 import AvatarHero from "../components/AvatarHero";
-import BellIcon from "../components/BellIcon";
 import PencilIcon from "../components/PencilIcon";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getUser } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
 import { signOut } from "../../controllers/api";
 import { formatDate } from "../../utils/strings";
+import GearIcon from "../components/GearIcon";
 
 const AVATAR_SIZE = 200;
 
@@ -41,8 +41,9 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
 
   const handleSignOut = () => {
     signOut();
-    SecureStore.setItem("MY_USER_ID", "");
-    navigation.replace("signin");
+    SecureStore.deleteItemAsync("MY_USER_ID").then(() =>
+      navigation.replace("signin"),
+    );
   };
 
   const renderEditAction = () => (
@@ -52,10 +53,10 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
     />
   );
 
-  const renderNotificationAction = () => (
+  const renderSettingsAction = () => (
     <TopNavigationAction
-      icon={BellIcon}
-      onPress={() => navigation.navigate("invitationlist")}
+      icon={GearIcon}
+      onPress={() => navigation.navigate("settings")}
     />
   );
 
@@ -71,7 +72,7 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         title="Profile"
         alignment="center"
         accessoryLeft={renderEditAction}
-        accessoryRight={renderNotificationAction}
+        accessoryRight={renderSettingsAction}
       />
       <Divider />
       <Layout style={styles.layout}>

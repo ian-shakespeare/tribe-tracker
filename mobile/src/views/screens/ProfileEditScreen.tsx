@@ -20,7 +20,7 @@ import { useToast } from "../contexts/Toast";
 import * as ImagePicker from "expo-image-picker";
 import BackArrowIcon from "../components/BackArrowIcon";
 import { Image } from "expo-image";
-import { getUser, updateUser, User } from "../../models/user";
+import { getUser, updateUser } from "../../models/user";
 import { useLiveQuery } from "../../db/liveQuery";
 import * as SecureStore from "expo-secure-store";
 import * as API from "../../controllers/api";

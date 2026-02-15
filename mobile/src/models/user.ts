@@ -80,29 +80,35 @@ export async function upsertUsers(users: User[]) {
     email,
     firstName,
     lastName,
+    avatar,
     createdAt,
     updatedAt
   ) VALUES (
-    $id, $email, $firstName, $lastName, $createdAt, $updatedAt
+    $id, $email, $firstName, $lastName, $avatar, $createdAt, $updatedAt
   )
   ON CONFLICT (id)
   DO UPDATE SET
     email = email,
     firstName = firstName,
     lastName = lastName,
+    avatar = avatar,
     updatedAt = updatedAt
   `);
 
+  console.log(`upserting users: ${JSON.stringify(users)}`);
+
   await Promise.all(
-    users.map(({ id, email, firstName, lastName, createdAt, updatedAt }) =>
-      statement.executeAsync({
-        $id: id,
-        $email: email,
-        $firstName: firstName,
-        $lastName: lastName,
-        $createdAt: createdAt.toISOString(),
-        $updatedAt: updatedAt.toISOString(),
-      }),
+    users.map(
+      ({ id, email, firstName, lastName, avatar, createdAt, updatedAt }) =>
+        statement.executeAsync({
+          $id: id,
+          $email: email,
+          $firstName: firstName,
+          $lastName: lastName,
+          $avatar: !avatar ? null : avatar,
+          $createdAt: createdAt.toISOString(),
+          $updatedAt: updatedAt.toISOString(),
+        }),
     ),
   );
 
@@ -173,7 +179,7 @@ export async function getUserLocations(): Promise<UserLocation[]> {
 
   return records.map((record) => ({
     ...record,
-    coordinates: JSON.parse(record.coordinates),
+    coordinates: JSON.parse(JSON.parse(record.coordinates)),
     recordedAt: new Date(record.recordedAt),
   }));
 }
@@ -239,4 +245,8 @@ export async function deleteUsers(ids: string[]) {
   await Promise.all([ids.map((id) => statement.executeAsync({ $userId: id }))]);
 
   await statement.finalizeAsync();
+}
+
+export async function deleteAllUsers() {
+  await DB.runAsync("DELETE FROM users");
 }
