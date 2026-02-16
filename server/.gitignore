@@ -1,8 +1,12 @@
 # Binary
 bin/
+tmp/
 
 # Data
 pb_data/
 
 # Test instance logs
 testdata/auxilary.db
+
+# Environment variables
+*.env
