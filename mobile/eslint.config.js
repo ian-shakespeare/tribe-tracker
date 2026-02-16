@@ -7,6 +7,9 @@ module.exports = defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
   {
-    ignores: ["dist/*"],
+    ignores: ["dist/*", "src/db/drizzle"],
+    rules: {
+      "no-console": "error",
+    },
   },
 ]);

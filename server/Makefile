@@ -27,4 +27,13 @@ fmt:
 cyclo:
 	$(CYCLO) -over $(cyclolevel) .
 
-.PHONY: clean cyclo fmt lint
+test:
+	$(GO) test ./...
+
+migration:
+	$(GO) run $(MAIN) migrate create $(migration_name)
+
+migrate:
+	$(GO) run $(MAIN) migrate up
+
+.PHONY: clean cyclo fmt lint test migration
