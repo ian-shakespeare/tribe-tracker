@@ -8,5 +8,8 @@ module.exports = defineConfig([
   eslintPluginPrettierRecommended,
   {
     ignores: ["dist/*", "src/db/drizzle"],
+    rules: {
+      "no-console": "error",
+    },
   },
 ]);

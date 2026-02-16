@@ -75,8 +75,8 @@ export async function upsertFamilies(families: Family[]) {
   )
   ON CONFLICT (id)
   DO UPDATE SET
-    name = name,
-    updatedAt = updatedAt
+    name = excluded.name,
+    updatedAt = excluded.updatedAt
   `);
 
   await Promise.all(

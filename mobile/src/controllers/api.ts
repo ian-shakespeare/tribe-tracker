@@ -180,13 +180,35 @@ type SyncResponse = {
 };
 
 export async function getSyncData(after: Date): Promise<SyncResponse> {
-  console.log("getSyncData");
-  const res = await pb.send<SyncResponse>(`/mobile/sync`, {
+  return await pb.send<SyncResponse>(`/mobile/sync`, {
     method: "GET",
     query: { after: after.toISOString() },
   });
+}
 
-  console.log("sync data: " + JSON.stringify(res));
+export async function createLocation(
+  lat: number,
+  lon: number,
+): Promise<
+  { success: true; location: ApiLocation } | { success: false; error: Error }
+> {
+  const user = pb.authStore.record?.id;
+  try {
+    if (!user) {
+      throw new Error("Not authorized.");
+    }
 
-  return res;
+    const created = await pb.collection<ApiLocation>("locations").create({
+      user,
+      coordinates: { lat, lon },
+    });
+
+    return { success: true, location: created };
+  } catch (error) {
+    if (error instanceof Error) {
+      return { success: false, error };
+    } else {
+      return { success: false, error: new Error("Unknown error.") };
+    }
+  }
 }

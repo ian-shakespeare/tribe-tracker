@@ -28,11 +28,11 @@ export async function upsertUser(
   )
   ON CONFLICT (id)
   DO UPDATE SET
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    avatar = avatar,
-    updatedAt = updatedAt
+    email = excluded.email,
+    firstName = excluded.firstName,
+    lastName = excluded.lastName,
+    avatar = excluded.avatar,
+    updatedAt = excluded.updatedAt
   RETURNING id,
     email,
     firstName,
@@ -93,14 +93,12 @@ export async function upsertUsers(users: User[]) {
   )
   ON CONFLICT (id)
   DO UPDATE SET
-    email = email,
-    firstName = firstName,
-    lastName = lastName,
-    avatar = avatar,
-    updatedAt = updatedAt
+    email = excluded.email,
+    firstName = excluded.firstName,
+    lastName = excluded.lastName,
+    avatar = excluded.avatar,
+    updatedAt = excluded.updatedAt
   `);
-
-  console.log(`upserting users: ${JSON.stringify(users)}`);
 
   await Promise.all(
     users.map(

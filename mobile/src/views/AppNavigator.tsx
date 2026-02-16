@@ -29,6 +29,7 @@ export type StackParamList = {
   postlist: undefined;
   profileedit: undefined;
   settings: undefined;
+  logs: undefined;
 };
 
 const Tab = createBottomTabNavigator<StackParamList>();

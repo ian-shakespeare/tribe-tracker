@@ -57,7 +57,7 @@ export async function createFamilyMember(
   };
 }
 
-export async function createFamilyMembers(familyMembers: FamilyMember[]) {
+export async function upsertFamilyMembers(familyMembers: FamilyMember[]) {
   const statement = await DB.prepareAsync(`
   INSERT INTO familyMembers (
     id,
@@ -67,6 +67,8 @@ export async function createFamilyMembers(familyMembers: FamilyMember[]) {
   ) VALUES (
     $id, $user, $family, $createdAt
   )
+  ON CONFLICT (id)
+  DO NOTHING
   `);
 
   await Promise.all(

@@ -7,15 +7,16 @@ import {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 import * as API from "../../controllers/api";
+import * as Location from "expo-location";
 import { deleteUsers, upsertUsers } from "../../models/user";
 import { deleteFamilies, upsertFamilies } from "../../models/family";
-import { createLocations } from "../../models/locations";
-import { createFamilyMembers } from "../../models/familyMember";
+import { upsertLocations } from "../../models/locations";
+import { upsertFamilyMembers } from "../../models/familyMember";
 
 const SyncContext = createContext<{
   lastSyncedAt: Date;
   sync: () => Promise<void>;
-  resetSync: () => void;
+  resetSync: () => Promise<void>;
 }>({
   lastSyncedAt: new Date(0),
   sync: () => {
@@ -32,14 +33,7 @@ type SyncProviderProps = {
   children: ReactNode;
 };
 
-async function sync(lastSyncedAt: Date) {
-  if (!API.isSignedIn()) {
-    throw new Error("Not authenticated.");
-  }
-
-  const { users, families, familyMembers, locations } =
-    await API.getSyncData(lastSyncedAt);
-
+async function upsertAndDeleteRecentUsers(users: API.ApiUser[]) {
   const { updatedUsers, deletedUserIDs } = users.reduce<{
     updatedUsers: API.ApiUser[];
     deletedUserIDs: string[];
@@ -59,7 +53,9 @@ async function sync(lastSyncedAt: Date) {
       updatedAt: new Date(user.createdAt),
     })),
   );
+}
 
+async function upsertAndDeleteFamilies(families: API.ApiFamily[]) {
   const { updatedFamilies, deletedFamilyIDs } = families.reduce<{
     updatedFamilies: API.ApiFamily[];
     deletedFamilyIDs: string[];
@@ -85,15 +81,52 @@ async function sync(lastSyncedAt: Date) {
       updatedAt: new Date(family.updatedAt),
     })),
   );
+}
 
-  await createFamilyMembers(
+async function getLocation(): Promise<Location.LocationObjectCoords> {
+  const { granted } = await Location.requestForegroundPermissionsAsync();
+  if (!granted) {
+    throw new Error("Insufficient permissions.");
+  }
+
+  const lastKnownPos = await Location.getLastKnownPositionAsync();
+  if (lastKnownPos) {
+    return lastKnownPos.coords;
+  }
+
+  const { coords } = await Location.getCurrentPositionAsync({
+    accuracy: Location.LocationAccuracy.Lowest,
+  });
+  return coords;
+}
+
+async function syncWithAPI(lastSyncedAt: Date) {
+  if (!API.isSignedIn()) {
+    throw new Error("Not authenticated.");
+  }
+
+  const coords = await getLocation();
+
+  const { success } = await API.createLocation(
+    coords.latitude,
+    coords.longitude,
+  );
+  if (!success) {
+    throw new Error("Failed to record user location.");
+  }
+
+  const { users, families, familyMembers, locations } =
+    await API.getSyncData(lastSyncedAt);
+
+  await upsertAndDeleteRecentUsers(users);
+  await upsertAndDeleteFamilies(families);
+  await upsertFamilyMembers(
     familyMembers.map((familyMember) => ({
       ...familyMember,
       createdAt: new Date(familyMember.createdAt),
     })),
   );
-
-  await createLocations(
+  await upsertLocations(
     locations.map((location) => ({
       ...location,
       createdAt: new Date(location.createdAt),
@@ -112,15 +145,17 @@ export const SyncProvider = ({ children }: SyncProviderProps) => {
     SecureStore.setItem("LAST_SYNCED_AT", d.toISOString());
   };
 
-  const resetSync = () => {
+  const resetSync = async () => {
     setLastSyncedAt(new Date(0));
-    SecureStore.setItem("LAST_SYNCED_AT", "");
+    SecureStore.deleteItemAsync("LAST_SYNCED_AT");
   };
 
   useEffect(() => {
-    sync(storedLastSyncedAt)
+    syncWithAPI(storedLastSyncedAt)
       .then(() => updateLastSyncedAt(new Date()))
-      .catch(console.warn);
+      .catch(() => {
+        /* ignore */
+      });
   }, [setLastSyncedAt]);
 
   return (
@@ -128,8 +163,10 @@ export const SyncProvider = ({ children }: SyncProviderProps) => {
       value={{
         lastSyncedAt,
         resetSync,
-        sync: () =>
-          sync(lastSyncedAt).then(() => updateLastSyncedAt(new Date())),
+        sync: async () => {
+          await syncWithAPI(lastSyncedAt);
+          updateLastSyncedAt(new Date());
+        },
       }}
     >
       {children}

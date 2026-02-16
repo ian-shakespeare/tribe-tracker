@@ -13,9 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import PlusIcon from "../components/PlusIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import PeopleIcon from "../components/PeopleIcon";
-import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import { useLiveQuery } from "../../db/liveQuery";
 import { Family, getAllFamilies } from "../../models/family";
 import { toTitleCase } from "../../utils/strings";
@@ -36,55 +35,13 @@ export default function FamilyListScreen({
   const theme = useTheme();
   const query = useLiveQuery(getAllFamilies);
 
-  const renderSwipeAction = () => (
-    <View style={{ flexDirection: "row" }}>
-      <Pressable
-        onPress={() => console.log("TODO: select family")}
-        style={({ pressed }) => ({
-          backgroundColor: theme["color-primary-default"],
-          paddingHorizontal: 16,
-          justifyContent: "center",
-          opacity: pressed ? 0.6 : 1,
-        })}
-      >
-        <Text>Select</Text>
-      </Pressable>
-      <Pressable
-        onPress={() =>
-          Alert.alert(
-            "Leave Family",
-            "You can't rejoin without an invitation.",
-            [
-              { text: "Cancel", onPress: () => {} },
-              {
-                text: "OK",
-                onPress: () => console.log("TODO: leave family"),
-                isPreferred: true,
-              },
-            ],
-          )
-        }
-        style={({ pressed }) => ({
-          backgroundColor: theme["color-danger-default"],
-          paddingHorizontal: 16,
-          justifyContent: "center",
-          opacity: pressed ? 0.6 : 1,
-        })}
-      >
-        <Text>Leave</Text>
-      </Pressable>
-    </View>
-  );
-
   const renderListItem = ({ item }: ListItemProps) => (
-    <Swipeable renderRightActions={renderSwipeAction}>
-      <ListItem
-        title={toTitleCase(item.name)}
-        style={{ paddingHorizontal: 16 }}
-        accessoryLeft={PeopleIcon}
-        onPress={() => navigation.push("familydetail", { familyId: item.id })}
-      />
-    </Swipeable>
+    <ListItem
+      title={toTitleCase(item.name)}
+      style={{ paddingHorizontal: 16 }}
+      accessoryLeft={PeopleIcon}
+      onPress={() => navigation.push("familydetail", { familyId: item.id })}
+    />
   );
 
   const renderMenuActions = useCallback(

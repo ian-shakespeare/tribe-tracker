@@ -31,3 +31,11 @@ export function formatDate(date: Date): string {
 
   return `${month} ${day}, ${year}`;
 }
+
+export function ellipsify(s: string, length: number): string {
+  if (s.length < length) {
+    return s;
+  }
+
+  return s.slice(0, length - 3) + "...";
+}

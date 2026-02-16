@@ -6,18 +6,18 @@ import AppNavigator from "./views/AppNavigator";
 import { ToastProvider } from "./views/contexts/Toast";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { SyncProvider } from "./views/contexts/Sync";
 import { runMigrations } from "./db/migrations";
 import DB from "./db";
+import { useEffect } from "react";
 
 SplashScreen.preventAutoHideAsync();
-runMigrations(DB);
 
 export default function App() {
+  // TODO: put this behind the auth stuff
   useEffect(() => {
-    runMigrations(DB).then(SplashScreen.hideAsync).catch(console.error); // TODO: put this behind the auth stuff
+    runMigrations(DB).then(SplashScreen.hideAsync);
   }, []);
 
   return (

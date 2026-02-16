@@ -12,7 +12,7 @@ import {
   useTheme,
 } from "@ui-kitten/components";
 import BackArrowIcon from "../components/BackArrowIcon";
-import { Alert, StyleSheet } from "react-native";
+import { Alert, StyleSheet, View } from "react-native";
 import { useSync } from "../contexts/Sync";
 import { ReactElement, useCallback } from "react";
 import { useLiveQuery } from "../../db/liveQuery";
@@ -23,6 +23,7 @@ import { deleteAllFamilies } from "../../models/family";
 import { deleteAllUsers } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
 import { signOut } from "../../controllers/api";
+import { useToast } from "../contexts/Toast";
 
 type ListItemProps = {
   title: string;
@@ -34,10 +35,21 @@ type SettingsScreenProps = NativeStackScreenProps<StackParamList, "settings">;
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const theme = useTheme();
-  const { lastSyncedAt, resetSync } = useSync();
+  const toast = useToast();
+  const { lastSyncedAt, sync, resetSync } = useSync();
   const query = useLiveQuery(getDatabaseSize);
 
-  const purgeAllData = useCallback(async () => {
+  const handleResync = async () => {
+    try {
+      sync();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.danger(e.message);
+      }
+    }
+  };
+
+  const handlePurgeData = useCallback(async () => {
     await deleteAllLocations();
     await deleteAllFamilyMembers();
     await deleteAllFamilies();
@@ -53,9 +65,14 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
       title: "Last Sync",
       description: lastSyncedAt.toLocaleString(),
       accessoryRight: () => (
-        <Button size="tiny" onPress={resetSync}>
-          RESET
-        </Button>
+        <View style={styles.buttonPair}>
+          <Button size="tiny" onPress={handleResync}>
+            RESYNC
+          </Button>
+          <Button size="tiny" status="danger" onPress={resetSync}>
+            RESET
+          </Button>
+        </View>
       ),
     },
     {
@@ -77,7 +94,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
                 { text: "Cancel", onPress: () => {} },
                 {
                   text: "OK",
-                  onPress: purgeAllData,
+                  onPress: handlePurgeData,
                   isPreferred: true,
                 },
               ],
@@ -132,5 +149,9 @@ const styles = StyleSheet.create({
   },
   layout: {
     flex: 1,
+  },
+  buttonPair: {
+    flexDirection: "row",
+    gap: 4,
   },
 });

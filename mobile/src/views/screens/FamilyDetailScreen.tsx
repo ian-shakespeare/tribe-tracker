@@ -13,7 +13,6 @@ import BackArrowIcon from "../components/BackArrowIcon";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { StackParamList } from "../AppNavigator";
 import { StyleSheet, View } from "react-native";
-import InviteIcon from "../components/InviteIcon";
 import { useLiveQuery } from "../../db/liveQuery";
 import {
   FamilyMemberUser,
@@ -40,12 +39,10 @@ export default function FamilyDetailScreen({
 
   const theme = useTheme();
   const query = useLiveQuery(async () => {
-    console.log("running");
     const [family, members] = await Promise.all([
       getFamily(familyId),
       getFamilyMembers(familyId),
     ]);
-    console.log({ members });
 
     return { family, members };
   });
@@ -62,17 +59,6 @@ export default function FamilyDetailScreen({
     <TopNavigationAction
       icon={BackArrowIcon}
       onPress={() => navigation.pop()}
-    />
-  );
-
-  const renderInviteAction = () => (
-    <TopNavigationAction
-      icon={InviteIcon}
-      onPress={() =>
-        navigation.navigate("familyinvite", {
-          familyId: route.params.familyId,
-        })
-      }
     />
   );
 
@@ -100,7 +86,6 @@ export default function FamilyDetailScreen({
         }
         alignment="center"
         accessoryLeft={renderBackAction}
-        accessoryRight={renderInviteAction}
       />
       <Divider />
       <Layout style={styles.layout}>

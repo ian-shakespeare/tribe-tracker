@@ -7,7 +7,7 @@ export type Location = {
   createdAt: Date;
 };
 
-export async function createLocations(locations: Location[]) {
+export async function upsertLocations(locations: Location[]) {
   const statement = await DB.prepareAsync(`
   INSERT INTO locations (
     id,
@@ -17,6 +17,8 @@ export async function createLocations(locations: Location[]) {
   ) VALUES (
     $id, $user, $coordinates, $createdAt
   )
+  ON CONFLICT (ID)
+  DO UPDATE SET coordinates = excluded.coordinates
   `);
 
   await Promise.all(
