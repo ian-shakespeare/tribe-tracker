@@ -62,7 +62,7 @@ func init() {
 			OnUpdate: true,
 		})
 
-		families.AddIndex("idx_family_name", false, "code", "")
+		families.AddIndex("idx_family_name", false, "name", "")
 		families.AddIndex("idx_family_code", true, "code", "")
 
 		return app.Save(families)

@@ -11,17 +11,15 @@ import {
 import { useCallback, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BackArrowIcon from "../components/BackArrowIcon";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
-import { useToast } from "../contexts/Toast";
-import * as API from "../../controllers/api";
-import { createFamily } from "../../models/family";
-import { createFamilyMember } from "../../models/familyMember";
+import BackArrowIcon from "../views/components/BackArrowIcon";
+import { useRouter } from "expo-router";
+import { useToast } from "../views/contexts/Toast";
+import * as API from "../controllers/api";
+import { createFamily } from "../models/family";
+import { createFamilyMember } from "../models/familyMember";
 
-type FamilyNewScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
-
-export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
+export default function FamilyNewScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const [name, setName] = useState("");
@@ -55,17 +53,17 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
       toast.danger("Failed to create local family member.");
     }
 
-    navigation.replace("familydetail", { familyId: created.family.id });
+    router.replace({
+      pathname: "/familydetail",
+      params: { familyId: created.family.id },
+    });
   };
 
   const renderMenuActions = useCallback(
     () => (
-      <TopNavigationAction
-        icon={BackArrowIcon}
-        onPress={() => navigation.pop()}
-      />
+      <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
     ),
-    [navigation],
+    [router],
   );
 
   return (

@@ -13,7 +13,10 @@ func init() {
 		}
 
 		families.RemoveIndex("idx_family_code")
+		families.RemoveIndex("idx_family_name")
 		families.Fields.RemoveByName("code")
+
+		families.AddIndex("idx_family_name", false, "name", "")
 
 		return app.Save(families)
 	}, func(app core.App) error {
@@ -28,8 +31,6 @@ func init() {
 			Max:      255,
 			Required: true,
 		})
-
-		families.AddIndex("idx_family_code", true, "code", "")
 
 		return app.Save(families)
 	})

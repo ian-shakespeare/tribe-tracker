@@ -9,39 +9,31 @@ import {
   useTheme,
 } from "@ui-kitten/components";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BackArrowIcon from "../components/BackArrowIcon";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
+import BackArrowIcon from "../views/components/BackArrowIcon";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { useLiveQuery } from "../../db/liveQuery";
+import { useLiveQuery } from "../db/liveQuery";
 import {
   FamilyMemberUser,
   getFamily,
   getFamilyMembers,
-} from "../../models/family";
-import { formatDate, toTitleCase } from "../../utils/strings";
-
-type FamilyDetailScreenProps = NativeStackScreenProps<
-  StackParamList,
-  "familydetail"
->;
+} from "../models/family";
+import { formatDate, toTitleCase } from "../utils/strings";
 
 type ListItemProps = {
   item: FamilyMemberUser;
   index: number;
 };
 
-export default function FamilyDetailScreen({
-  navigation,
-  route,
-}: FamilyDetailScreenProps) {
-  const { familyId } = route.params;
+export default function FamilyDetailScreen() {
+  const router = useRouter();
+  const { familyId } = useLocalSearchParams<{ familyId: string }>();
 
   const theme = useTheme();
   const query = useLiveQuery(async () => {
     const [family, members] = await Promise.all([
-      getFamily(familyId),
-      getFamilyMembers(familyId),
+      getFamily(familyId!),
+      getFamilyMembers(familyId!),
     ]);
 
     return { family, members };
@@ -56,10 +48,7 @@ export default function FamilyDetailScreen({
   );
 
   const renderBackAction = () => (
-    <TopNavigationAction
-      icon={BackArrowIcon}
-      onPress={() => navigation.pop()}
-    />
+    <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
   );
 
   const renderEmpty = () => (

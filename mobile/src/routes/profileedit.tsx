@@ -12,30 +12,23 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
+import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useState } from "react";
-import { useToast } from "../contexts/Toast";
+import { useToast } from "../views/contexts/Toast";
 import * as ImagePicker from "expo-image-picker";
-import BackArrowIcon from "../components/BackArrowIcon";
+import BackArrowIcon from "../views/components/BackArrowIcon";
 import { Image } from "expo-image";
-import { getUser, updateUser } from "../../models/user";
-import { useLiveQuery } from "../../db/liveQuery";
+import { getUser, updateUser } from "../models/user";
+import { useLiveQuery } from "../db/liveQuery";
 import * as SecureStore from "expo-secure-store";
-import * as API from "../../controllers/api";
-import { toTitleCase } from "../../utils/strings";
+import * as API from "../controllers/api";
+import { toTitleCase } from "../utils/strings";
 
 const AVATAR_SIZE = 200;
 
-type ProfileEditScreenProps = NativeStackScreenProps<
-  StackParamList,
-  "profileedit"
->;
-
-export default function ProfileEditScreen({
-  navigation,
-}: ProfileEditScreenProps) {
+export default function ProfileEditScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const { bottom } = useSafeAreaInsets();
@@ -97,7 +90,7 @@ export default function ProfileEditScreen({
         throw new Error("Failed to update local user. Please re-sync.");
       }
 
-      navigation.pop();
+      router.back();
     } catch (e) {
       if (e instanceof Error) {
         toast.danger(e.message);
@@ -106,10 +99,7 @@ export default function ProfileEditScreen({
   };
 
   const renderBackAction = () => (
-    <TopNavigationAction
-      icon={BackArrowIcon}
-      onPress={() => navigation.pop()}
-    />
+    <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
   );
 
   return (

@@ -8,24 +8,22 @@ import {
   useTheme,
 } from "@ui-kitten/components";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
+import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { useToast } from "../contexts/Toast";
-import AvatarHero from "../components/AvatarHero";
-import PencilIcon from "../components/PencilIcon";
+import { useToast } from "../../views/contexts/Toast";
+import AvatarHero from "../../views/components/AvatarHero";
+import PencilIcon from "../../views/components/PencilIcon";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getUser } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
 import { signOut } from "../../controllers/api";
 import { formatDate } from "../../utils/strings";
-import GearIcon from "../components/GearIcon";
+import GearIcon from "../../views/components/GearIcon";
 
 const AVATAR_SIZE = 200;
 
-type ProfileScreenProps = NativeStackScreenProps<StackParamList, "profile">;
-
-export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+export default function ProfileScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
 
@@ -42,21 +40,21 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
   const handleSignOut = () => {
     signOut();
     SecureStore.deleteItemAsync("MY_USER_ID").then(() =>
-      navigation.replace("signin"),
+      router.replace("/signin"),
     );
   };
 
   const renderEditAction = () => (
     <TopNavigationAction
       icon={PencilIcon}
-      onPress={() => navigation.navigate("profileedit")}
+      onPress={() => router.push("/profileedit")}
     />
   );
 
   const renderSettingsAction = () => (
     <TopNavigationAction
       icon={GearIcon}
-      onPress={() => navigation.navigate("settings")}
+      onPress={() => router.push("/settings")}
     />
   );
 

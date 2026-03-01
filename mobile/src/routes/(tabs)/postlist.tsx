@@ -6,13 +6,9 @@ import {
   useTheme,
 } from "@ui-kitten/components";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
 import { StyleSheet, View } from "react-native";
 
-type PostListScreenProps = NativeStackScreenProps<StackParamList, "postlist">;
-
-export default function PostListScreen({ navigation: _ }: PostListScreenProps) {
+export default function PostListScreen() {
   const theme = useTheme();
 
   return (

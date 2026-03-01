@@ -1,26 +1,22 @@
 import { Button, Input, Layout, Text, useTheme } from "@ui-kitten/components";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
-import SecureInput from "../components/SecureInput";
+import SecureInput from "../views/components/SecureInput";
 import {
   ApiUser,
   getBaseUrl,
-  isSignedIn,
-  refreshAuth,
-  registerUser,
   saveBaseUrl,
   signIn,
-} from "../../controllers/api";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
-import { useToast } from "../contexts/Toast";
-import { upsertUser } from "../../models/user";
+  registerUser,
+} from "../controllers/api";
+import { useRouter } from "expo-router";
+import { useToast } from "../views/contexts/Toast";
+import { upsertUser } from "../models/user";
 import * as SecureStore from "expo-secure-store";
-import { useSync } from "../contexts/Sync";
+import { useSync } from "../views/contexts/Sync";
 
-type SignInScreenProps = NativeStackScreenProps<StackParamList, "signin">;
-
-export default function SignInScreen({ navigation }: SignInScreenProps) {
+export default function SignInScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const { sync } = useSync();
@@ -28,24 +24,10 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
   const [authMode, setAuthMode] = useState<"sign-in" | "register">("sign-in");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [apiUrl, setApiUrl] = useState("");
+  const [apiUrl, setApiUrl] = useState(getBaseUrl());
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  useEffect(() => {
-    if (isSignedIn()) {
-      navigation.navigate("tabs" as never);
-      return;
-    }
-
-    refreshAuth()
-      .then(() => navigation.navigate("tabs" as never))
-      .catch(() => {
-        const baseUrl = getBaseUrl();
-        setApiUrl(baseUrl);
-      });
-  }, [navigation]);
 
   const handleSubmit = async () => {
     try {
@@ -92,7 +74,7 @@ export default function SignInScreen({ navigation }: SignInScreenProps) {
 
       await SecureStore.setItemAsync("MY_USER_ID", apiUser.id).then(sync);
 
-      navigation.navigate("tabs");
+      router.replace("/(tabs)/map");
     } catch (e) {
       if (e instanceof Error) {
         toast.danger(e.message);

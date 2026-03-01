@@ -1,4 +1,4 @@
-import PlatformMap from "../components/PlatformMap";
+import PlatformMap from "../../views/components/PlatformMap";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getUserLocations } from "../../models/user";
 import { toTitleCase } from "../../utils/strings";

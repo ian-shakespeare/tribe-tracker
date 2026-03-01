@@ -1,5 +1,4 @@
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
+import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
@@ -12,24 +11,24 @@ import {
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import BackArrowIcon from "../components/BackArrowIcon";
+import BackArrowIcon from "../views/components/BackArrowIcon";
 import { Alert, StyleSheet, View } from "react-native";
-import { useSync } from "../contexts/Sync";
+import { useSync } from "../views/contexts/Sync";
 import { ReactElement, useCallback, useEffect, useState } from "react";
-import { useLiveQuery } from "../../db/liveQuery";
-import { getDatabaseSize } from "../../models/meta";
-import { deleteAllLocations } from "../../models/locations";
-import { deleteAllFamilyMembers } from "../../models/familyMember";
-import { deleteAllFamilies } from "../../models/family";
-import { deleteAllUsers } from "../../models/user";
+import { useLiveQuery } from "../db/liveQuery";
+import { getDatabaseSize } from "../models/meta";
+import { deleteAllLocations } from "../models/locations";
+import { deleteAllFamilyMembers } from "../models/familyMember";
+import { deleteAllFamilies } from "../models/family";
+import { deleteAllUsers } from "../models/user";
 import * as SecureStore from "expo-secure-store";
-import { signOut } from "../../controllers/api";
-import { useToast } from "../contexts/Toast";
+import { signOut } from "../controllers/api";
+import { useToast } from "../views/contexts/Toast";
 import {
   isTrackingActive,
   startBackgroundTracking,
   stopBackgroundTracking,
-} from "../../services/backgroundLocation";
+} from "../services/backgroundLocation";
 
 type ListItemProps = {
   title: string;
@@ -37,9 +36,8 @@ type ListItemProps = {
   accessoryRight?: () => ReactElement;
 };
 
-type SettingsScreenProps = NativeStackScreenProps<StackParamList, "settings">;
-
-export default function SettingsScreen({ navigation }: SettingsScreenProps) {
+export default function SettingsScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const { lastSyncedAt, sync, resetSync } = useSync();
@@ -89,8 +87,8 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
 
     signOut();
     await SecureStore.deleteItemAsync("MY_USER_ID");
-    navigation.replace("signin");
-  }, [navigation]);
+    router.replace("/signin");
+  }, [router]);
 
   const options: ListItemProps[] = [
     {
@@ -147,10 +145,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   ];
 
   const renderBackAction = () => (
-    <TopNavigationAction
-      icon={BackArrowIcon}
-      onPress={() => navigation.pop()}
-    />
+    <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
   );
 
   const renderListItem = ({ item }: { item: ListItemProps }) => (

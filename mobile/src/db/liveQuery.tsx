@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import * as SQLite from "expo-sqlite";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "expo-router";
 
 export function useLiveQuery<T>(query: () => Promise<T>):
   | {

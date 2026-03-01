@@ -10,11 +10,10 @@ import {
 } from "@ui-kitten/components";
 import { useCallback } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import PlusIcon from "../components/PlusIcon";
-import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { StackParamList } from "../AppNavigator";
+import PlusIcon from "../../views/components/PlusIcon";
+import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import PeopleIcon from "../components/PeopleIcon";
+import PeopleIcon from "../../views/components/PeopleIcon";
 import { useLiveQuery } from "../../db/liveQuery";
 import { Family, getAllFamilies } from "../../models/family";
 import { toTitleCase } from "../../utils/strings";
@@ -24,14 +23,8 @@ type ListItemProps = {
   index: number;
 };
 
-type FamilyListScreenProps = NativeStackScreenProps<
-  StackParamList,
-  "familylist"
->;
-
-export default function FamilyListScreen({
-  navigation,
-}: FamilyListScreenProps) {
+export default function FamilyListScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const query = useLiveQuery(getAllFamilies);
 
@@ -40,7 +33,12 @@ export default function FamilyListScreen({
       title={toTitleCase(item.name)}
       style={{ paddingHorizontal: 16 }}
       accessoryLeft={PeopleIcon}
-      onPress={() => navigation.push("familydetail", { familyId: item.id })}
+      onPress={() =>
+        router.push({
+          pathname: "/familydetail",
+          params: { familyId: item.id },
+        })
+      }
     />
   );
 
@@ -48,10 +46,10 @@ export default function FamilyListScreen({
     () => (
       <TopNavigationAction
         icon={PlusIcon}
-        onPress={() => navigation.push("familynew")}
+        onPress={() => router.push("/familynew")}
       />
     ),
-    [navigation],
+    [router],
   );
 
   return (
@@ -77,7 +75,7 @@ export default function FamilyListScreen({
               You don&apos;t have a family yet.{"\n"}But you can{" "}
               <Text
                 category="h6"
-                onPress={() => navigation.navigate("familynew")}
+                onPress={() => router.push("/familynew")}
                 style={[
                   styles.highlight,
                   {
