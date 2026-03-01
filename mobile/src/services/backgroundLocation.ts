@@ -1,19 +1,15 @@
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
-import { createLocation, isSignedIn } from "../controllers/api";
-import { logger } from "react-native-logs";
-
-const log = logger.createLogger();
+import * as API from "../controllers/api";
 
 const TASK_NAME = "BACKGROUND_LOCATION_TASK";
 
 TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
   if (error) {
-    log.warn("Background location task error:", error.message);
     return;
   }
 
-  if (!isSignedIn()) {
+  if (!API.isSignedIn()) {
     return;
   }
 
@@ -26,12 +22,9 @@ TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
   const latest = locations[locations.length - 1];
   const { latitude, longitude } = latest.coords;
 
-  try {
-    await createLocation(latitude, longitude);
-  } catch {
-    // Discard on failure -- no offline queueing
-    log.warn("Background location push failed, discarding.");
-  }
+  await API.createLocation(latitude, longitude).catch(() => {
+    /* couldn't reach the server */
+  });
 });
 
 export async function startBackgroundTracking(): Promise<boolean> {
