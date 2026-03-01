@@ -83,10 +83,10 @@ async function upsertAndDeleteFamilies(families: API.ApiFamily[]) {
   );
 }
 
-async function getLocation(): Promise<Location.LocationObjectCoords> {
+async function getLocation(): Promise<Location.LocationObjectCoords | null> {
   const { granted } = await Location.requestForegroundPermissionsAsync();
   if (!granted) {
-    throw new Error("Insufficient permissions.");
+    return null;
   }
 
   const lastKnownPos = await Location.getLastKnownPositionAsync();
@@ -105,14 +105,12 @@ async function syncWithAPI(lastSyncedAt: Date) {
     throw new Error("Not authenticated.");
   }
 
+  // One-shot foreground location push as a fallback.
+  // Background task handles periodic updates; this ensures
+  // fresh location data when the user actively opens the app.
   const coords = await getLocation();
-
-  const { success } = await API.createLocation(
-    coords.latitude,
-    coords.longitude,
-  );
-  if (!success) {
-    throw new Error("Failed to record user location.");
+  if (coords) {
+    await API.createLocation(coords.latitude, coords.longitude).catch(() => {});
   }
 
   const { users, families, familyMembers, locations } =

@@ -7,6 +7,7 @@ import {
   Layout,
   List,
   ListItem,
+  Toggle,
   TopNavigation,
   TopNavigationAction,
   useTheme,
@@ -14,7 +15,7 @@ import {
 import BackArrowIcon from "../components/BackArrowIcon";
 import { Alert, StyleSheet, View } from "react-native";
 import { useSync } from "../contexts/Sync";
-import { ReactElement, useCallback } from "react";
+import { ReactElement, useCallback, useEffect, useState } from "react";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getDatabaseSize } from "../../models/meta";
 import { deleteAllLocations } from "../../models/locations";
@@ -24,6 +25,11 @@ import { deleteAllUsers } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
 import { signOut } from "../../controllers/api";
 import { useToast } from "../contexts/Toast";
+import {
+  isTrackingActive,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from "../../services/backgroundLocation";
 
 type ListItemProps = {
   title: string;
@@ -38,6 +44,31 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   const toast = useToast();
   const { lastSyncedAt, sync, resetSync } = useSync();
   const query = useLiveQuery(getDatabaseSize);
+  const [backgroundTracking, setBackgroundTracking] = useState(false);
+
+  useEffect(() => {
+    isTrackingActive().then(setBackgroundTracking);
+  }, []);
+
+  const handleToggleTracking = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        const started = await startBackgroundTracking();
+        if (!started) {
+          toast.danger(
+            "Location permission denied. Enable it in your device settings.",
+          );
+          return;
+        }
+        setBackgroundTracking(true);
+      } else {
+        await stopBackgroundTracking();
+        setBackgroundTracking(false);
+      }
+    } catch {
+      toast.danger("Failed to update background tracking.");
+    }
+  };
 
   const handleResync = async () => {
     try {
@@ -50,6 +81,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   };
 
   const handlePurgeData = useCallback(async () => {
+    await stopBackgroundTracking();
     await deleteAllLocations();
     await deleteAllFamilyMembers();
     await deleteAllFamilies();
@@ -61,6 +93,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps) {
   }, [navigation]);
 
   const options: ListItemProps[] = [
+    {
+      title: "Background Tracking",
+      description: backgroundTracking ? "Active" : "Inactive",
+      accessoryRight: () => (
+        <Toggle checked={backgroundTracking} onChange={handleToggleTracking} />
+      ),
+    },
     {
       title: "Last Sync",
       description: lastSyncedAt.toLocaleString(),
