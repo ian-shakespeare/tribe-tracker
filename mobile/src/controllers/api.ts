@@ -134,9 +134,7 @@ export type ApiFamily = Omit<Family, "createdAt" | "updatedAt"> & {
 type NewApiFamily = Omit<
   ApiFamily,
   "id" | "createdBy" | "createdAt" | "updatedAt" | "isDeleted"
-> & {
-  code: string;
-};
+>;
 
 export type ApiFamilyMember = Omit<FamilyMember, "createdAt"> & {
   createdAt: string;

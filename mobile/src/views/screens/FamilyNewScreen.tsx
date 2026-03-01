@@ -17,7 +17,6 @@ import { StackParamList } from "../AppNavigator";
 import { useToast } from "../contexts/Toast";
 import * as API from "../../controllers/api";
 import { createFamily } from "../../models/family";
-import * as Crypto from "expo-crypto";
 import { createFamilyMember } from "../../models/familyMember";
 
 type FamilyNewScreenProps = NativeStackScreenProps<StackParamList, "familynew">;
@@ -30,7 +29,6 @@ export default function FamilyNewScreen({ navigation }: FamilyNewScreenProps) {
   const handleSubmit = async () => {
     const res = await API.createFamily({
       name,
-      code: Crypto.randomUUID().replaceAll("-", ""),
     });
     if (!res.success) {
       toast.danger(res.error.message);
