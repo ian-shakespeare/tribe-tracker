@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
+      UIBackgroundModes: ["location"],
     },
   },
   android: {
@@ -68,5 +69,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     "expo-secure-store",
     "expo-sqlite",
+    "expo-task-manager",
   ],
 });
