@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:18
+    ports:
+      - 5432:5432
+    volumes:
+      - .docker-storage/postgres:/var/lib/postgresql/18/data
+    environment:
+      POSTGRES_DB: tribetracker
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_SSL: disable
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
