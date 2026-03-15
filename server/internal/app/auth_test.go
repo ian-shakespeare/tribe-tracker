@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
 	"github.com/stretchr/testify/assert"
@@ -16,6 +17,7 @@ import (
 
 func TestRegister(t *testing.T) {
 	container, db := createDbContainerAndConnection(t)
+	defer testcontainers.CleanupContainer(t, container)
 
 	testCases := []struct {
 		name               string
@@ -76,7 +78,7 @@ func TestRegister(t *testing.T) {
 				"/api/register",
 				strings.NewReader(tc.inputBody),
 			)
-			a := app.New(db, []byte("test-signing-key"))
+			a := app.New(db)
 
 			res, err := a.Test(r)
 			require.NoError(t, err)
@@ -93,12 +95,11 @@ func TestRegister(t *testing.T) {
 			}
 		})
 	}
-
-	testcontainers.CleanupContainer(t, container)
 }
 
 func TestSignIn(t *testing.T) {
 	container, db := createDbContainerAndConnection(t)
+	defer testcontainers.CleanupContainer(t, container)
 
 	testCases := []struct {
 		name               string
@@ -117,7 +118,7 @@ func TestSignIn(t *testing.T) {
 			},
 		},
 		{
-			name:         "incorrect-password",
+			name:         "incorrect password",
 			inputBody:    `{"email":"incorrect-password@email.com","password":"bad"}`,
 			expectStatus: http.StatusNotFound,
 			onBeforeTest: func(t *testing.T, a *app.App) {
@@ -141,7 +142,7 @@ func TestSignIn(t *testing.T) {
 				"/api/sign-in",
 				strings.NewReader(tc.inputBody),
 			)
-			a := app.New(db, []byte("test-signing-key"))
+			a := app.New(db)
 
 			if tc.onBeforeTest != nil {
 				tc.onBeforeTest(t, a)
@@ -162,12 +163,11 @@ func TestSignIn(t *testing.T) {
 			}
 		})
 	}
-
-	testcontainers.CleanupContainer(t, container)
 }
 
 func TestRefreshToken(t *testing.T) {
 	container, db := createDbContainerAndConnection(t)
+	defer testcontainers.CleanupContainer(t, container)
 
 	testCases := []struct {
 		name               string
@@ -185,7 +185,7 @@ func TestRefreshToken(t *testing.T) {
 			},
 		},
 		{
-			name:         "incorrect-password",
+			name:         "invalid refresh",
 			expectStatus: http.StatusUnauthorized,
 			buildRefreshToken: func(t *testing.T, a *app.App) string {
 				return ""
@@ -197,7 +197,7 @@ func TestRefreshToken(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			a := app.New(db, []byte("test-signing-key"))
+			a := app.New(db)
 			refreshToken := tc.buildRefreshToken(t, a)
 			refreshTokenJson := fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)
 
@@ -223,6 +223,27 @@ func TestRefreshToken(t *testing.T) {
 			}
 		})
 	}
+}
 
-	testcontainers.CleanupContainer(t, container)
+func TestRefreshExpiredToken(t *testing.T) {
+	container, db := createDbContainerAndConnection(t)
+	defer testcontainers.CleanupContainer(t, container)
+
+	t.Run("expired token", func(t *testing.T) {
+		a := app.New(db, app.WithRefreshExpiry(time.Second))
+		access := registerUser(t, a, "refresh-expired@email.com", "password", "john", "doe")
+		time.Sleep(2 * time.Second)
+
+		refreshTokenJson := fmt.Sprintf(`{"refreshToken":"%s"}`, access.RefreshToken)
+		r := httptest.NewRequestWithContext(
+			t.Context(),
+			http.MethodPost,
+			"/api/refresh",
+			strings.NewReader(refreshTokenJson),
+		)
+
+		res, err := a.Test(r)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	})
 }

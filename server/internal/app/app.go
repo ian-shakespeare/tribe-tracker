@@ -1,9 +1,12 @@
 package app
 
 import (
+	"context"
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
@@ -32,23 +35,53 @@ func NewResponse[T any](status int, body T) *Response[T] {
 type Empty struct{}
 
 type App struct {
-	server     *fiber.App
-	db         *database.Queries
-	signingKey []byte
+	server        *fiber.App
+	db            *database.Queries
+	signingKey    []byte
+	accessExpiry  time.Duration
+	refreshExpiry time.Duration
 }
 
-func New(db *sql.DB, signingKey []byte) *App {
+type AppOption func(a *App)
+
+func WithSigningKey(k string) AppOption {
+	return func(a *App) {
+		a.signingKey = []byte(k)
+	}
+}
+
+func WithAccessExpiry(t time.Duration) AppOption {
+	return func(a *App) {
+		a.accessExpiry = t
+	}
+}
+
+func WithRefreshExpiry(t time.Duration) AppOption {
+	return func(a *App) {
+		a.refreshExpiry = t
+	}
+}
+
+func New(db *sql.DB, opts ...AppOption) *App {
 	server := fiber.New()
 	router := humafiber.New(server, huma.DefaultConfig("Tribe Tracker API", "1.0.0"))
 
 	a := &App{
-		db:         database.New(db),
-		signingKey: signingKey,
+		db:            database.New(db),
+		signingKey:    []byte("dummy-signing-key"),
+		accessExpiry:  time.Hour,
+		refreshExpiry: 60 * 24 * time.Hour, // 60 days default
+	}
+
+	for _, opt := range opts {
+		opt(a)
 	}
 
 	api := huma.NewGroup(router, "/api")
 
 	authMiddleware := func(ctx huma.Context, next func(huma.Context)) {
+		fmt.Printf("RUNNING THE DAMN MIDDLEWARE")
+
 		bearer := ctx.Header("Authorization")
 		tokenParts := strings.Split(bearer, "Bearer ")
 		if len(tokenParts) < 2 {
@@ -79,8 +112,7 @@ func New(db *sql.DB, signingKey []byte) *App {
 			return
 		}
 
-		ctx.SetHeader("UserId", user.UserUuid.String())
-
+		ctx = huma.WithValue(ctx, "user-id", user.UserUuid.String())
 		next(ctx)
 	}
 
@@ -111,6 +143,25 @@ func New(db *sql.DB, signingKey []byte) *App {
 	}, a.RefreshToken)
 
 	huma.Register(api, huma.Operation{
+		Method:      http.MethodPatch,
+		Path:        "/users/me",
+		Summary:     "Update me",
+		Description: "Updates the caller's user.",
+		Tags:        []string{"User"},
+		Middlewares: huma.Middlewares{authMiddleware},
+	}, a.UpdateMe)
+
+	huma.Register(api, huma.Operation{
+		Method:        http.MethodPost,
+		Path:          "/families",
+		DefaultStatus: http.StatusCreated,
+		Summary:       "Create family",
+		Description:   "Create a new family",
+		Middlewares:   huma.Middlewares{authMiddleware},
+		Tags:          []string{"Family"},
+	}, a.CreateFamily)
+
+	huma.Register(api, huma.Operation{
 		Method:      http.MethodGet,
 		Path:        "/sync",
 		Summary:     "Get sync data",
@@ -129,4 +180,15 @@ func (a *App) Listen(addr string) error {
 
 func (a *App) Test(req *http.Request, msTimeout ...int) (*http.Response, error) {
 	return a.server.Test(req, msTimeout...)
+}
+
+func ctxToUserId(ctx context.Context) uuid.UUID {
+	userId := ctx.Value("user-id")
+
+	userIdStr, ok := userId.(string)
+	if !ok {
+		panic("failed to get userId from context")
+	}
+
+	return uuid.MustParse(userIdStr)
 }

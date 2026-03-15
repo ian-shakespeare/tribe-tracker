@@ -16,7 +16,7 @@ func TestHealthCheck(t *testing.T) {
 		t.Parallel()
 
 		r := httptest.NewRequestWithContext(t.Context(), "GET", "/api/healthcheck", http.NoBody)
-		h := app.New(nil, []byte(""))
+		h := app.New(nil)
 
 		res, err := h.Test(r)
 		require.NoError(t, err)

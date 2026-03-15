@@ -113,7 +113,7 @@ func main() {
 
 	signingKey := env.Must(env.Get("SIGNING_KEY"))
 
-	a := app.New(db, []byte(signingKey))
+	a := app.New(db, app.WithSigningKey(signingKey))
 
 	addr := ":8000"
 	fmt.Printf("Listening on %s\n", addr)

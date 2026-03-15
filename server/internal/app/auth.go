@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -86,13 +85,15 @@ func (a *App) RegisterUser(ctx context.Context, req *RegisterUserRequest) (*Auth
 		return nil, huma.Error500InternalServerError("Failed to create user record.")
 	}
 
-	session, err := a.db.CreateSession(ctx, user.UserUuid)
+	session, err := a.db.CreateSession(ctx, database.CreateSessionParams{
+		UserUuid:  user.UserUuid,
+		ExpiresAt: a.getRefreshExpiry(),
+	})
 	if err != nil {
-		fmt.Printf("Error: %s", err.Error())
 		return nil, huma.Error500InternalServerError("Failed to create session.")
 	}
 
-	expiry := getExpiry()
+	expiry := a.getAccessExpiry()
 	signed, err := createAndSignToken(a.signingKey, expiry, user.UserUuid)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to sign access token.")
@@ -131,12 +132,15 @@ func (a *App) SignIn(ctx context.Context, req *SignInRequest) (*AuthResponse, er
 		return nil, huma.Error404NotFound("User not found.")
 	}
 
-	session, err := a.db.CreateSession(ctx, user.UserUuid)
+	session, err := a.db.CreateSession(ctx, database.CreateSessionParams{
+		UserUuid:  user.UserUuid,
+		ExpiresAt: a.getRefreshExpiry(),
+	})
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to create session.")
 	}
 
-	expiry := getExpiry()
+	expiry := a.getAccessExpiry()
 	signed, err := createAndSignToken(a.signingKey, expiry, user.UserUuid)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to sign access token.")
@@ -164,7 +168,10 @@ func (a *App) RefreshToken(ctx context.Context, req *RefreshRequest) (*AuthRespo
 		return nil, huma.Error401Unauthorized("Invalid refresh token.")
 	}
 
-	session, err := a.db.RefreshSession(ctx, refreshToken)
+	session, err := a.db.RefreshSession(ctx, database.RefreshSessionParams{
+		RefreshToken: refreshToken,
+		ExpiresAt:    a.getRefreshExpiry(),
+	})
 	if err != nil {
 		return nil, huma.Error404NotFound("User not found.")
 	}
@@ -174,7 +181,7 @@ func (a *App) RefreshToken(ctx context.Context, req *RefreshRequest) (*AuthRespo
 		return nil, huma.Error404NotFound("User not found.")
 	}
 
-	expiry := getExpiry()
+	expiry := a.getAccessExpiry()
 	signed, err := createAndSignToken(a.signingKey, expiry, user.UserUuid)
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to sign access token.")
@@ -190,8 +197,12 @@ func (a *App) RefreshToken(ctx context.Context, req *RefreshRequest) (*AuthRespo
 	}, nil
 }
 
-func getExpiry() time.Time {
-	return time.Now().Add(time.Hour).UTC()
+func (a *App) getAccessExpiry() time.Time {
+	return time.Now().Add(a.accessExpiry).UTC()
+}
+
+func (a *App) getRefreshExpiry() time.Time {
+	return time.Now().Add(a.refreshExpiry).UTC()
 }
 
 func createAndSignToken(signingKey []byte, expiry time.Time, userId uuid.UUID) (string, error) {

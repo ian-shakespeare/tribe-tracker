@@ -23,7 +23,7 @@ func main() {
 
 	outputPath := args[1]
 
-	a := app.New(nil, []byte(""))
+	a := app.New(nil)
 
 	req, err := http.NewRequest(http.MethodGet, "/openapi.yaml", http.NoBody)
 	if err != nil {
