@@ -105,3 +105,52 @@ returning user_uuid,
   avatar,
   created_at,
   updated_at;
+
+-- name: CreateLocation :one
+with inserted_location as (
+  insert into locations (user_id, coordinates)
+  select u.user_id as user_id,
+    st_setsrid(st_makepoint(sqlc.arg(lat)::real, sqlc.arg(lon)::real), 4326) as coordinates
+  from users u
+  where u.user_uuid = $1
+    and u.is_deleted = false
+  returning location_uuid,
+    user_id,
+    coordinates,
+    created_at
+)
+select ia.location_uuid,
+  u.user_uuid,
+  jsonb_build_object('lat', st_y(ia.coordinates::geometry), 'lon', st_x(ia.coordinates::geometry)) as coordinates,
+  ia.created_at
+from inserted_location as ia
+join users u
+  on ia.user_id = u.user_id
+  and u.is_deleted = false;
+
+-- name: CreateFamilyMember :one
+with inserted_family_member as (
+  insert into family_members (user_id, family_id)
+  select u.user_id as user_id,
+    f.family_id as family_id
+  from users u
+  join families f
+    on f.family_uuid = $1
+    and f.is_deleted = false
+  where u.user_uuid = $2
+    and u.is_deleted = false
+  returning family_member_id,
+    user_id,
+    family_id,
+    created_at
+)
+select u.user_uuid,
+  f.family_uuid,
+  ifm.created_at
+from inserted_family_member ifm
+join users u
+  on ifm.user_id = u.user_id
+  and u.is_deleted = false
+join families f
+  on ifm.family_id = f.family_id
+  and f.is_deleted = false;
