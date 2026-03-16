@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -80,8 +79,6 @@ func New(db *sql.DB, opts ...AppOption) *App {
 	api := huma.NewGroup(router, "/api")
 
 	authMiddleware := func(ctx huma.Context, next func(huma.Context)) {
-		fmt.Printf("RUNNING THE DAMN MIDDLEWARE")
-
 		bearer := ctx.Header("Authorization")
 		tokenParts := strings.Split(bearer, "Bearer ")
 		if len(tokenParts) < 2 {
@@ -156,10 +153,30 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		Path:          "/families",
 		DefaultStatus: http.StatusCreated,
 		Summary:       "Create family",
-		Description:   "Create a new family",
+		Description:   "Create a new family.",
 		Middlewares:   huma.Middlewares{authMiddleware},
 		Tags:          []string{"Family"},
 	}, a.CreateFamily)
+
+	huma.Register(api, huma.Operation{
+		Method:        http.MethodPost,
+		Path:          "/families/{familyId}/members",
+		DefaultStatus: http.StatusCreated,
+		Summary:       "Join family",
+		Description:   "Join a new family.",
+		Middlewares:   huma.Middlewares{authMiddleware},
+		Tags:          []string{"Family"},
+	}, a.CreateFamilyMember)
+
+	huma.Register(api, huma.Operation{
+		Method:        http.MethodPost,
+		Path:          "/locations",
+		DefaultStatus: http.StatusCreated,
+		Summary:       "Create location",
+		Description:   "Create a new location.",
+		Middlewares:   huma.Middlewares{authMiddleware},
+		Tags:          []string{"Location"},
+	}, a.CreateLocation)
 
 	huma.Register(api, huma.Operation{
 		Method:      http.MethodGet,

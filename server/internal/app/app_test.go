@@ -24,7 +24,7 @@ func createDbContainerAndConnection(t *testing.T) (*pgcontainer.PostgresContaine
 
 	container, err := pgcontainer.Run(
 		t.Context(),
-		"postgres:18",
+		"postgis/postgis:18-3.6",
 		pgcontainer.WithDatabase(dbName),
 		pgcontainer.WithUsername(dbUser),
 		pgcontainer.WithPassword(dbPassword),
