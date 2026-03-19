@@ -1,7 +1,7 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    queries: "database/queries.sql"
+    queries: "database/queries/"
     schema: "database/migrations"
     gen:
       go:
