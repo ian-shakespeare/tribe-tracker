@@ -1,1 +1,1 @@
-alter table sessions add column if not exists expires_at timestamp with time zone not null;
+alter table sessions add column expires_at integer not null;

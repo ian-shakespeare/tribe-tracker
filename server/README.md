@@ -1,6 +1,6 @@
 # Tribe Tracker
 
-A template Go web application using PostgreSQL.
+A template Go web application using SQLite.
 
 ## Getting Started
 

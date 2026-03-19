@@ -1,6 +1,6 @@
 version: "2"
 sql:
-  - engine: "postgresql"
+  - engine: "sqlite"
     queries: "database/queries.sql"
     schema: "database/migrations"
     gen:
@@ -11,4 +11,6 @@ sql:
         emit_pointers_for_null_types: true
         json_tags_case_style: camel
         sql_package: database/sql
-        sql_driver: github.com/lib/pq
+        overrides:
+          - db_type: "blob"
+            go_type: "github.com/google/uuid.UUID"

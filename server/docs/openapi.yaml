@@ -22,6 +22,41 @@ components:
         - refreshToken
         - expiry
       type: object
+    CreateFamilyRequestBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/CreateFamilyRequestBody.json
+          format: uri
+          readOnly: true
+          type: string
+        name:
+          type: string
+      required:
+        - name
+      type: object
+    CreateLocationRequestBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/CreateLocationRequestBody.json
+          format: uri
+          readOnly: true
+          type: string
+        lat:
+          format: double
+          type: number
+        lon:
+          format: double
+          type: number
+      required:
+        - lat
+        - lon
+      type: object
     ErrorDetail:
       additionalProperties: false
       properties:
@@ -81,6 +116,57 @@ components:
           format: uri
           type: string
       type: object
+    Family:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/Family.json
+          format: uri
+          readOnly: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        createdBy:
+          type: string
+        id:
+          type: string
+        name:
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - name
+        - createdBy
+        - createdAt
+        - updatedAt
+      type: object
+    FamilyMember:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/FamilyMember.json
+          format: uri
+          readOnly: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        family:
+          type: string
+        user:
+          type: string
+      required:
+        - user
+        - family
+        - createdAt
+      type: object
     HealthCheckResponse:
       additionalProperties: false
       properties:
@@ -95,6 +181,36 @@ components:
           type: string
       required:
         - status
+      type: object
+    Location:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/Location.json
+          format: uri
+          readOnly: true
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        id:
+          type: string
+        lat:
+          format: double
+          type: number
+        lon:
+          format: double
+          type: number
+        user:
+          type: string
+      required:
+        - id
+        - user
+        - lat
+        - lon
+        - createdAt
       type: object
     RefreshRequestBody:
       additionalProperties: false
@@ -153,11 +269,113 @@ components:
         - email
         - password
       type: object
+    UpdateMeRequestBody:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/UpdateMeRequestBody.json
+          format: uri
+          readOnly: true
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+      type: object
+    User:
+      additionalProperties: false
+      properties:
+        $schema:
+          description: A URL to the JSON Schema for this object.
+          examples:
+            - https://example.com/schemas/User.json
+          format: uri
+          readOnly: true
+          type: string
+        FirstName:
+          type: string
+        LastName:
+          type: string
+        avatar:
+          type:
+            - string
+            - "null"
+        createdAt:
+          format: date-time
+          type: string
+        email:
+          type: string
+        id:
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - email
+        - FirstName
+        - LastName
+        - avatar
+        - createdAt
+        - updatedAt
+      type: object
 info:
   title: Tribe Tracker API
   version: 1.0.0
 openapi: 3.1.0
 paths:
+  /api/families:
+    post:
+      description: Create a new family.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFamilyRequestBody"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Family"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Create family
+      tags:
+        - Family
+  /api/families/{familyId}/members:
+    post:
+      description: Join a new family.
+      parameters:
+        - in: path
+          name: familyId
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Join family
+      tags:
+        - Family
   /api/healthcheck:
     get:
       operationId: get-api-healthcheck
@@ -175,6 +393,31 @@ paths:
                 $ref: "#/components/schemas/ErrorModel"
           description: Error
       summary: Get API healthcheck
+  /api/locations:
+    post:
+      description: Create a new location.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLocationRequestBody"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Location"
+          description: Created
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Create location
+      tags:
+        - Location
   /api/refresh:
     post:
       description: Refresh an existing token.
@@ -276,3 +519,28 @@ paths:
       summary: Get sync data
       tags:
         - Sync
+  /api/users/me:
+    patch:
+      description: Updates the caller's user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateMeRequestBody"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: Update me
+      tags:
+        - User

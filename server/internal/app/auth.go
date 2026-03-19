@@ -10,8 +10,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/database"
-	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 )
 
 type Access struct {
@@ -69,15 +70,16 @@ func (a *App) RegisterUser(ctx context.Context, req *RegisterUserRequest) (*Auth
 	}
 
 	user, err := a.db.CreateUser(ctx, database.CreateUserParams{
+		UserUuid:       uuid.New(),
 		Email:          req.Body.Email,
 		PasswordDigest: string(passwordDigest),
 		FirstName:      req.Body.FirstName,
 		LastName:       req.Body.LastName,
 	})
 	if err != nil {
-		pqErr := new(pq.Error)
-		if errors.As(err, &pqErr) {
-			if pqErr.Code.Name() == "unique_violation" {
+		sqlErr := new(sqlite.Error)
+		if errors.As(err, &sqlErr) {
+			if sqlErr.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE {
 				return nil, huma.Error409Conflict("Email already in use.")
 			}
 		}
@@ -86,8 +88,9 @@ func (a *App) RegisterUser(ctx context.Context, req *RegisterUserRequest) (*Auth
 	}
 
 	session, err := a.db.CreateSession(ctx, database.CreateSessionParams{
-		UserUuid:  user.UserUuid,
-		ExpiresAt: a.getRefreshExpiry(),
+		UserUuid:     user.UserUuid,
+		RefreshToken: uuid.New(),
+		ExpiresAt:    a.getRefreshExpiry().Unix(),
 	})
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to create session.")
@@ -133,8 +136,9 @@ func (a *App) SignIn(ctx context.Context, req *SignInRequest) (*AuthResponse, er
 	}
 
 	session, err := a.db.CreateSession(ctx, database.CreateSessionParams{
-		UserUuid:  user.UserUuid,
-		ExpiresAt: a.getRefreshExpiry(),
+		UserUuid:     user.UserUuid,
+		RefreshToken: uuid.New(),
+		ExpiresAt:    a.getRefreshExpiry().Unix(),
 	})
 	if err != nil {
 		return nil, huma.Error500InternalServerError("Failed to create session.")
@@ -169,8 +173,9 @@ func (a *App) RefreshToken(ctx context.Context, req *RefreshRequest) (*AuthRespo
 	}
 
 	session, err := a.db.RefreshSession(ctx, database.RefreshSessionParams{
-		RefreshToken: refreshToken,
-		ExpiresAt:    a.getRefreshExpiry(),
+		RefreshToken:    refreshToken,
+		ExpiresAt:       a.getRefreshExpiry().Unix(),
+		NewRefreshToken: uuid.New(),
 	})
 	if err != nil {
 		return nil, huma.Error404NotFound("User not found.")

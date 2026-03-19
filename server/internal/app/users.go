@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"database/sql"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/database"
@@ -21,30 +21,28 @@ type UpdateMeResponse struct {
 }
 
 func (a *App) UpdateMe(ctx context.Context, req *UpdateMeRequest) (*UpdateMeResponse, error) {
-	var firstName, lastName sql.NullString
+	var firstName, lastName *string
 
 	if req.Body.FirstName != nil {
-		firstName.Valid = true
-		firstName.String = *req.Body.FirstName
+		firstName = req.Body.FirstName
 
-		if len(firstName.String) < 2 {
+		if len(*firstName) < 2 {
 			return nil, huma.Error400BadRequest("First name must be at least 2 characters.")
 		}
 
-		if len(firstName.String) > 64 {
+		if len(*firstName) > 64 {
 			return nil, huma.Error400BadRequest("First name must be less than 64 characters.")
 		}
 	}
 
 	if req.Body.LastName != nil {
-		lastName.Valid = true
-		lastName.String = *req.Body.LastName
+		lastName = req.Body.LastName
 
-		if len(lastName.String) < 2 {
+		if len(*lastName) < 2 {
 			return nil, huma.Error400BadRequest("Last name must be at least 2 characters.")
 		}
 
-		if len(lastName.String) > 64 {
+		if len(*lastName) > 64 {
 			return nil, huma.Error400BadRequest("Last name must be less than 64 characters.")
 		}
 	}
@@ -65,12 +63,9 @@ func (a *App) UpdateMe(ctx context.Context, req *UpdateMeRequest) (*UpdateMeResp
 	res.Body.Email = user.Email
 	res.Body.FirstName = user.FirstName
 	res.Body.LastName = user.LastName
-	res.Body.CreatedAt = user.CreatedAt
-	res.Body.UpdatedAt = user.UpdatedAt
-
-	if user.Avatar.Valid {
-		res.Body.Avatar = &user.Avatar.String
-	}
+	res.Body.CreatedAt = time.Unix(user.CreatedAt, 0)
+	res.Body.UpdatedAt = time.Unix(user.UpdatedAt, 0)
+	res.Body.Avatar = user.Avatar
 
 	return &res, nil
 }

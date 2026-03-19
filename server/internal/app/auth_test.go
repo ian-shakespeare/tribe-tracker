@@ -12,12 +12,13 @@ import (
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
 )
 
 func TestRegister(t *testing.T) {
-	container, db := createDbContainerAndConnection(t)
-	defer testcontainers.CleanupContainer(t, container)
+	t.Parallel()
+
+	db := createDb(t)
+	t.Cleanup(func() { db.Close() })
 
 	testCases := []struct {
 		name               string
@@ -70,8 +71,6 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			r := httptest.NewRequestWithContext(
 				t.Context(),
 				http.MethodPost,
@@ -98,8 +97,10 @@ func TestRegister(t *testing.T) {
 }
 
 func TestSignIn(t *testing.T) {
-	container, db := createDbContainerAndConnection(t)
-	defer testcontainers.CleanupContainer(t, container)
+	t.Parallel()
+
+	db := createDb(t)
+	t.Cleanup(func() { db.Close() })
 
 	testCases := []struct {
 		name               string
@@ -134,8 +135,6 @@ func TestSignIn(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			r := httptest.NewRequestWithContext(
 				t.Context(),
 				http.MethodPost,
@@ -166,8 +165,10 @@ func TestSignIn(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	container, db := createDbContainerAndConnection(t)
-	defer testcontainers.CleanupContainer(t, container)
+	t.Parallel()
+
+	db := createDb(t)
+	t.Cleanup(func() { db.Close() })
 
 	testCases := []struct {
 		name               string
@@ -195,8 +196,6 @@ func TestRefreshToken(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			a := app.New(db)
 			refreshToken := tc.buildRefreshToken(t, a)
 			refreshTokenJson := fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)
@@ -226,8 +225,8 @@ func TestRefreshToken(t *testing.T) {
 }
 
 func TestRefreshExpiredToken(t *testing.T) {
-	container, db := createDbContainerAndConnection(t)
-	defer testcontainers.CleanupContainer(t, container)
+	db := createDb(t)
+	t.Cleanup(func() { db.Close() })
 
 	t.Run("expired token", func(t *testing.T) {
 		a := app.New(db, app.WithRefreshExpiry(time.Second))

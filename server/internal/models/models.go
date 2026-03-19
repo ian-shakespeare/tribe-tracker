@@ -2,11 +2,6 @@ package models
 
 import "time"
 
-type Coordinates struct {
-	Lat float32 `json:"lat"`
-	Lon float32 `json:"lon"`
-}
-
 type Family struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
@@ -22,10 +17,11 @@ type FamilyMember struct {
 }
 
 type Location struct {
-	ID          string      `json:"id"`
-	User        string      `json:"user"`
-	Coordinates Coordinates `json:"coordinates"`
-	CreatedAt   time.Time   `json:"createdAt"`
+	ID        string    `json:"id"`
+	User      string    `json:"user"`
+	Lat       float64   `json:"lat"`
+	Lon       float64   `json:"lon"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type User struct {

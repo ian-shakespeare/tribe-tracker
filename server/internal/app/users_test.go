@@ -11,12 +11,13 @@ import (
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
 )
 
 func TestUpdateMe(t *testing.T) {
-	container, db := createDbContainerAndConnection(t)
-	defer testcontainers.CleanupContainer(t, container)
+	t.Parallel()
+
+	db := createDb(t)
+	t.Cleanup(func() { db.Close() })
 
 	testCases := []struct {
 		name               string
@@ -88,8 +89,6 @@ func TestUpdateMe(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
-
 			a := app.New(db)
 			access := tc.buildAccess(t, a)
 

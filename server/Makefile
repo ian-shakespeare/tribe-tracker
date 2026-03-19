@@ -1,6 +1,7 @@
 API := cmd/api/main.go
 BIN := bin/go-app-template
 COMPOSE := docker compose
+DATA := .data
 DOCS := cmd/docs/main.go
 GO := go
 LINTER := golangci-lint
@@ -12,7 +13,7 @@ build:
 	$(GO) build -o $(BIN) $(API)
 
 clean:
-	rm -rf $(BIN)
+	rm -rf $(BIN) $(DATA)
 
 docs:
 	$(GO) run $(DOCS) docs/openapi.yaml
@@ -23,16 +24,16 @@ down:
 fmt:
 	$(GO) fmt ./...
 
-lint:
+generate:
+	@./scripts/generate.sh
+
+lint: generate
 	$(LINTER) run ./...
 
 run:
 	$(GO) run $(API) $(RUN_FLAGS)
 
-test:
-	$(GO) test ./internal/... -failfast
-
-up:
-	$(COMPOSE) up -d
+test: generate
+	$(GO) test ./internal/... $(testargs)
 
 .PHONY: docs down lint run test up

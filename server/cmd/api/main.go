@@ -9,13 +9,13 @@ import (
 	"path/filepath"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/ian-shakespeare/tribe-tracker/server/database/migrations"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/env"
 	"github.com/joho/godotenv"
-	_ "github.com/lib/pq"
+	_ "modernc.org/sqlite"
 )
 
 const dataDir = "data"
@@ -79,14 +79,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	dbHost := env.Fallback("POSTGRES_HOST", "localhost")
-	dbPort := env.Fallback("POSTGRES_PORT", "5432")
-	dbUser := env.Fallback("POSTGRES_USER", "admin")
-	dbPassword := env.Fallback("POSTGRES_PASSWORD", "password")
-	dbName := env.Fallback("POSTGRES_DB", "tribetracker")
-	dbSsl := env.Fallback("POSTGRES_SSL", "disable")
-	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSsl)
-	db, err := sql.Open("postgres", connStr)
+	db, err := sql.Open("sqlite", filepath.Join(baseDir, dataDir, "tribetracker.db"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,12 +90,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	driver, err := sqlite.WithInstance(db, &sqlite.Config{
+		NoTxWrap: true,
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	migrator, err := migrate.NewWithInstance("postgres", source, "", driver)
+	migrator, err := migrate.NewWithInstance("sqlite", source, "", driver)
 	if err != nil {
 		log.Fatal(err)
 	}
