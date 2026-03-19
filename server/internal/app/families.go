@@ -9,7 +9,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/database"
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/models"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 	"modernc.org/sqlite"
 	"modernc.org/sqlite/lib"
 )

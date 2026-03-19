@@ -6,7 +6,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/database"
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/models"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
 type UpdateMeRequest struct {
