@@ -4,15 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humafiber"
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/database"
+	"github.com/ian-shakespeare/tribe-tracker/server/internal/middlewares"
 )
 
 type Request[T any] struct {
@@ -78,41 +77,6 @@ func New(db *sql.DB, opts ...AppOption) *App {
 
 	api := huma.NewGroup(router, "/api")
 
-	authMiddleware := func(ctx huma.Context, next func(huma.Context)) {
-		bearer := ctx.Header("Authorization")
-		tokenParts := strings.Split(bearer, "Bearer ")
-		if len(tokenParts) < 2 {
-			huma.WriteErr(api, ctx, http.StatusUnauthorized, "Invalid token header.")
-			return
-		}
-		token := tokenParts[1]
-
-		var claims jwt.RegisteredClaims
-		_, err := jwt.ParseWithClaims(token, &claims, func(t *jwt.Token) (any, error) {
-			return a.signingKey, nil
-		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-
-		if err != nil {
-			huma.WriteErr(api, ctx, http.StatusUnauthorized, "Invalid token.")
-			return
-		}
-
-		userId, err := uuid.Parse(claims.Subject)
-		if err != nil {
-			huma.WriteErr(api, ctx, http.StatusBadRequest, "Invalid user ID.")
-			return
-		}
-
-		user, err := a.db.GetUser(ctx.Context(), userId)
-		if err != nil {
-			huma.WriteErr(api, ctx, http.StatusUnauthorized, "User not found.")
-			return
-		}
-
-		ctx = huma.WithValue(ctx, "user-id", user.UserUuid.String())
-		next(ctx)
-	}
-
 	huma.Get(api, "/healthcheck", a.HealthCheck)
 
 	huma.Register(api, huma.Operation{
@@ -145,7 +109,7 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		Summary:     "Update me",
 		Description: "Updates the caller's user.",
 		Tags:        []string{"User"},
-		Middlewares: huma.Middlewares{authMiddleware},
+		Middlewares: huma.Middlewares{middlewares.Authorize(api, a.db, a.signingKey)},
 	}, a.UpdateMe)
 
 	huma.Register(api, huma.Operation{
@@ -154,7 +118,7 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		DefaultStatus: http.StatusCreated,
 		Summary:       "Create family",
 		Description:   "Create a new family.",
-		Middlewares:   huma.Middlewares{authMiddleware},
+		Middlewares:   huma.Middlewares{middlewares.Authorize(api, a.db, a.signingKey)},
 		Tags:          []string{"Family"},
 	}, a.CreateFamily)
 
@@ -164,7 +128,7 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		DefaultStatus: http.StatusCreated,
 		Summary:       "Join family",
 		Description:   "Join a new family.",
-		Middlewares:   huma.Middlewares{authMiddleware},
+		Middlewares:   huma.Middlewares{middlewares.Authorize(api, a.db, a.signingKey)},
 		Tags:          []string{"Family"},
 	}, a.CreateFamilyMember)
 
@@ -174,7 +138,7 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		DefaultStatus: http.StatusCreated,
 		Summary:       "Create location",
 		Description:   "Create a new location.",
-		Middlewares:   huma.Middlewares{authMiddleware},
+		Middlewares:   huma.Middlewares{middlewares.Authorize(api, a.db, a.signingKey)},
 		Tags:          []string{"Location"},
 	}, a.CreateLocation)
 
@@ -183,7 +147,7 @@ func New(db *sql.DB, opts ...AppOption) *App {
 		Path:        "/sync",
 		Summary:     "Get sync data",
 		Description: "Get sync data from after the given date.",
-		Middlewares: huma.Middlewares{authMiddleware},
+		Middlewares: huma.Middlewares{middlewares.Authorize(api, a.db, a.signingKey)},
 		Tags:        []string{"Sync"},
 	}, a.GetSyncData)
 
