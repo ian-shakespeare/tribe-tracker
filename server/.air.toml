@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = ["-v"]
   bin = "./bin/go-app-template"
-  cmd = "./scripts/generate.sh && go build -o ./bin/go-app-template cmd/api/main.go"
+  cmd = "./scripts/generate.sh && go build -o ./bin/go-app-template cmd/main.go"
   delay = 1000
   exclude_dir = ["assets", "docs", "tmp", "vendor", "testdata", "web", "internal/database"]
   exclude_file = []

@@ -1,4 +1,4 @@
-package app_test
+package routes_test
 
 import (
 	"fmt"
@@ -9,17 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
+	"github.com/gofiber/fiber/v3"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRegister(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		inputBody          string
@@ -71,13 +66,16 @@ func TestRegister(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			a := createServer(t)
+
 			r := httptest.NewRequestWithContext(
 				t.Context(),
 				http.MethodPost,
-				"/api/register",
+				"/api/auth/register",
 				strings.NewReader(tc.inputBody),
 			)
-			a := app.New(db)
 
 			res, err := a.Test(r)
 			require.NoError(t, err)
@@ -97,24 +95,19 @@ func TestRegister(t *testing.T) {
 }
 
 func TestSignIn(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		inputBody          string
 		expectStatus       int
 		expectBodyContains []string
-		onBeforeTest       func(*testing.T, *app.App)
+		onBeforeTest       func(*testing.T, *fiber.App)
 	}{
 		{
 			name:               "ok",
 			inputBody:          `{"email":"sign-in-ok@email.com","password":"password"}`,
 			expectStatus:       http.StatusCreated,
 			expectBodyContains: []string{"accessToken", "refreshToken", "expiry"},
-			onBeforeTest: func(t *testing.T, a *app.App) {
+			onBeforeTest: func(t *testing.T, a *fiber.App) {
 				registerUser(t, a, "sign-in-ok@email.com", "password", "john", "doe")
 			},
 		},
@@ -122,7 +115,7 @@ func TestSignIn(t *testing.T) {
 			name:         "incorrect password",
 			inputBody:    `{"email":"incorrect-password@email.com","password":"bad"}`,
 			expectStatus: http.StatusNotFound,
-			onBeforeTest: func(t *testing.T, a *app.App) {
+			onBeforeTest: func(t *testing.T, a *fiber.App) {
 				registerUser(t, a, "incorrect-password@email.com", "password", "john", "doe")
 			},
 		},
@@ -135,13 +128,16 @@ func TestSignIn(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			a := createServer(t)
+
 			r := httptest.NewRequestWithContext(
 				t.Context(),
 				http.MethodPost,
-				"/api/sign-in",
+				"/api/auth/sign-in",
 				strings.NewReader(tc.inputBody),
 			)
-			a := app.New(db)
 
 			if tc.onBeforeTest != nil {
 				tc.onBeforeTest(t, a)
@@ -165,22 +161,17 @@ func TestSignIn(t *testing.T) {
 }
 
 func TestRefreshToken(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		expectStatus       int
 		expectBodyContains []string
-		buildRefreshToken  func(*testing.T, *app.App) string
+		buildRefreshToken  func(*testing.T, *fiber.App) string
 	}{
 		{
 			name:               "ok",
 			expectStatus:       http.StatusCreated,
 			expectBodyContains: []string{"accessToken", "refreshToken", "expiry"},
-			buildRefreshToken: func(t *testing.T, a *app.App) string {
+			buildRefreshToken: func(t *testing.T, a *fiber.App) string {
 				access := registerUser(t, a, "refresh-ok@email.com", "password", "john", "doe")
 				return access.RefreshToken
 			},
@@ -188,7 +179,7 @@ func TestRefreshToken(t *testing.T) {
 		{
 			name:         "invalid refresh",
 			expectStatus: http.StatusUnauthorized,
-			buildRefreshToken: func(t *testing.T, a *app.App) string {
+			buildRefreshToken: func(t *testing.T, a *fiber.App) string {
 				return ""
 			},
 		},
@@ -196,14 +187,17 @@ func TestRefreshToken(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := app.New(db)
+			t.Parallel()
+
+			a := createServer(t)
+
 			refreshToken := tc.buildRefreshToken(t, a)
 			refreshTokenJson := fmt.Sprintf(`{"refreshToken":"%s"}`, refreshToken)
 
 			r := httptest.NewRequestWithContext(
 				t.Context(),
 				http.MethodPost,
-				"/api/refresh",
+				"/api/auth/refresh",
 				strings.NewReader(refreshTokenJson),
 			)
 
@@ -225,11 +219,12 @@ func TestRefreshToken(t *testing.T) {
 }
 
 func TestRefreshExpiredToken(t *testing.T) {
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	t.Run("expired token", func(t *testing.T) {
-		a := app.New(db, app.WithRefreshExpiry(time.Second))
+		t.Parallel()
+
+		a := createServer(t)
+		a.State().Set("refreshExpiry", time.Second)
+
 		access := registerUser(t, a, "refresh-expired@email.com", "password", "john", "doe")
 		time.Sleep(2 * time.Second)
 
@@ -237,7 +232,7 @@ func TestRefreshExpiredToken(t *testing.T) {
 		r := httptest.NewRequestWithContext(
 			t.Context(),
 			http.MethodPost,
-			"/api/refresh",
+			"/api/auth/refresh",
 			strings.NewReader(refreshTokenJson),
 		)
 

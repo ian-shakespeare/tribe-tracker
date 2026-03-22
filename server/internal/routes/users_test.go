@@ -1,4 +1,4 @@
-package app_test
+package routes_test
 
 import (
 	"fmt"
@@ -8,30 +8,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
+	"github.com/gofiber/fiber/v3"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUpdateMe(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		inputBody          string
 		expectStatus       int
 		expectBodyContains []string
-		buildAccess        func(*testing.T, *app.App) app.Access
+		buildAccess        func(*testing.T, *fiber.App) models.Access
 	}{
 		{
 			name:               "ok first name",
 			inputBody:          `{"firstName":"Johnny"}`,
 			expectStatus:       http.StatusOK,
 			expectBodyContains: []string{"johnny"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-first@email.com", "password", "john", "doe")
 			},
 		},
@@ -40,7 +36,7 @@ func TestUpdateMe(t *testing.T) {
 			inputBody:          `{"lastName":"Dough"}`,
 			expectStatus:       http.StatusOK,
 			expectBodyContains: []string{"dough"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-last@email.com", "password", "john", "doe")
 			},
 		},
@@ -49,7 +45,7 @@ func TestUpdateMe(t *testing.T) {
 			inputBody:          `{"firstName":"Johnny","lastName":"Dough"}`,
 			expectStatus:       http.StatusOK,
 			expectBodyContains: []string{"johnny", "dough"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-full@email.com", "password", "john", "doe")
 			},
 		},
@@ -57,7 +53,7 @@ func TestUpdateMe(t *testing.T) {
 			name:         "first name too short",
 			inputBody:    `{"firstName":"j"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-first-short@email.com", "password", "john", "doe")
 			},
 		},
@@ -65,7 +61,7 @@ func TestUpdateMe(t *testing.T) {
 			name:         "first name too long",
 			inputBody:    `{"firstName":"JohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJohnJ"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-first-long@email.com", "password", "john", "doe")
 			},
 		},
@@ -73,7 +69,7 @@ func TestUpdateMe(t *testing.T) {
 			name:         "last name too short",
 			inputBody:    `{"lastName":"d"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-last-short@email.com", "password", "john", "doe")
 			},
 		},
@@ -81,7 +77,7 @@ func TestUpdateMe(t *testing.T) {
 			name:         "last name too long",
 			inputBody:    `{"lastName":"DoughDoughDoughDoughDoughDoughDoughDoughDoughDoughDoughDoughDough"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "update-me-last-long@email.com", "password", "john", "doe")
 			},
 		},
@@ -89,7 +85,10 @@ func TestUpdateMe(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := app.New(db)
+			t.Parallel()
+
+			a := createServer(t)
+
 			access := tc.buildAccess(t, a)
 
 			r := httptest.NewRequestWithContext(

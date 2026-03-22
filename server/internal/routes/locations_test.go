@@ -1,4 +1,4 @@
-package app_test
+package routes_test
 
 import (
 	"fmt"
@@ -8,30 +8,26 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
+	"github.com/gofiber/fiber/v3"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateLocation(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		inputBody          string
 		expectStatus       int
 		expectBodyContains []string
-		buildAccess        func(*testing.T, *app.App) app.Access
+		buildAccess        func(*testing.T, *fiber.App) models.Access
 	}{
 		{
 			name:               "ok",
 			inputBody:          `{"lat":1.0,"lon":1.0}`,
 			expectStatus:       http.StatusCreated,
 			expectBodyContains: []string{"id", "user", "lat", "lon", "createdAt"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-location-ok@email.com", "password", "john", "doe")
 			},
 		},
@@ -39,7 +35,9 @@ func TestCreateLocation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := app.New(db)
+			t.Parallel()
+
+			a := createServer(t)
 			access := tc.buildAccess(t, a)
 
 			r := httptest.NewRequestWithContext(

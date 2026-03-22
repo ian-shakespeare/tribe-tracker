@@ -1,4 +1,4 @@
-package app_test
+package routes_test
 
 import (
 	"encoding/json"
@@ -9,31 +9,27 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateFamily(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		inputBody          string
 		expectStatus       int
 		expectBodyContains []string
-		buildAccess        func(*testing.T, *app.App) app.Access
+		buildAccess        func(*testing.T, *fiber.App) models.Access
 	}{
 		{
 			name:               "ok",
 			inputBody:          `{"name":"The Doe Family"}`,
 			expectStatus:       http.StatusCreated,
 			expectBodyContains: []string{"id", "name", "createdBy", "createdAt", "updatedAt"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-ok@email.com", "password", "john", "doe")
 			},
 		},
@@ -41,7 +37,7 @@ func TestCreateFamily(t *testing.T) {
 			name:         "name too short",
 			inputBody:    `{"name":"T"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-too-short@email.com", "password", "john", "doe")
 			},
 		},
@@ -49,7 +45,7 @@ func TestCreateFamily(t *testing.T) {
 			name:         "name too long",
 			inputBody:    `{"name":"The Doe FamilyThe Doe FamilyThe Doe FamilyThe Doe FamilyThe Doe F"}`,
 			expectStatus: http.StatusBadRequest,
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-too-long@email.com", "password", "john", "doe")
 			},
 		},
@@ -57,7 +53,9 @@ func TestCreateFamily(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := app.New(db)
+			t.Parallel()
+
+			a := createServer(t)
 			access := tc.buildAccess(t, a)
 
 			r := httptest.NewRequestWithContext(
@@ -86,23 +84,18 @@ func TestCreateFamily(t *testing.T) {
 }
 
 func TestCreateFamilyMember(t *testing.T) {
-	t.Parallel()
-
-	db := createDb(t)
-	t.Cleanup(func() { db.Close() })
-
 	testCases := []struct {
 		name               string
 		expectStatus       int
 		expectBodyContains []string
 		overrideFamilyId   string
-		buildAccess        func(*testing.T, *app.App) app.Access
+		buildAccess        func(*testing.T, *fiber.App) models.Access
 	}{
 		{
 			name:               "ok",
 			expectStatus:       http.StatusCreated,
 			expectBodyContains: []string{"user", "family", "createdAt"},
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-member-ok@email.com", "password", "john", "doe")
 			},
 		},
@@ -110,7 +103,7 @@ func TestCreateFamilyMember(t *testing.T) {
 			name:             "not found",
 			expectStatus:     http.StatusNotFound,
 			overrideFamilyId: uuid.Nil.String(),
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-member-not-found@email.com", "password", "john", "doe")
 			},
 		},
@@ -118,7 +111,7 @@ func TestCreateFamilyMember(t *testing.T) {
 			name:             "bad family id",
 			expectStatus:     http.StatusBadRequest,
 			overrideFamilyId: "bad",
-			buildAccess: func(t *testing.T, a *app.App) app.Access {
+			buildAccess: func(t *testing.T, a *fiber.App) models.Access {
 				return registerUser(t, a, "create-family-member-bad-family@email.com", "password", "john", "doe")
 			},
 		},
@@ -126,7 +119,9 @@ func TestCreateFamilyMember(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			a := app.New(db)
+			t.Parallel()
+
+			a := createServer(t)
 			access := tc.buildAccess(t, a)
 
 			r := httptest.NewRequestWithContext(
@@ -145,7 +140,7 @@ func TestCreateFamilyMember(t *testing.T) {
 				ID string `json:"id"`
 			}
 			err = json.NewDecoder(res.Body).Decode(&family)
-			res.Body.Close()
+			_ = res.Body.Close()
 			require.NoError(t, err)
 
 			familyId := family.ID

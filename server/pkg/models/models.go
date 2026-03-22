@@ -2,6 +2,12 @@ package models
 
 import "time"
 
+type Access struct {
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	Expiry       time.Time `json:"expiry"`
+}
+
 type Family struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
@@ -24,11 +30,41 @@ type Location struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type NewFamily struct {
+	Name string `json:"name"`
+}
+
+type NewLocation struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+type NewUser struct {
+	Email     string `json:"email"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	Password  string `json:"password"`
+}
+
+type Refresh struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type SignIn struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type UpdateUser struct {
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+}
+
 type User struct {
 	ID        string    `json:"id"`
 	Email     string    `json:"email"`
-	FirstName string    `json:""`
-	LastName  string    `json:""`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
 	Avatar    *string   `json:"avatar"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`

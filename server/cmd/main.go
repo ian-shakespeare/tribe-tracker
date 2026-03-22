@@ -1,19 +1,16 @@
 package main
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
-	"github.com/ian-shakespeare/tribe-tracker/server/database/migrations"
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/app"
+	"github.com/gofiber/fiber/v3"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/env"
+	"github.com/ian-shakespeare/tribe-tracker/server/internal/routes"
+	"github.com/ian-shakespeare/tribe-tracker/server/internal/services"
 	"github.com/joho/godotenv"
 	_ "modernc.org/sqlite"
 )
@@ -66,6 +63,14 @@ func checkDirPermission(path string) error {
 	return err
 }
 
+//	@title			Tribe Tracker API
+//	@version		1.0.0
+//	@description	Web API for Tribe Tracker
+
+//	@servers.url	http://localhost:8000
+
+//	@securityDefinitions.bearerauth	BearerAuth
+
 func main() {
 	_ = godotenv.Load()
 
@@ -79,40 +84,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("sqlite", filepath.Join(baseDir, dataDir, "tribetracker.db"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	source, err := iofs.New(migrations.FS, ".")
+	dbSrv, err := services.NewDB(filepath.Join(baseDir, dataDir, "tribetracker.db"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	driver, err := sqlite.WithInstance(db, &sqlite.Config{
-		NoTxWrap: true,
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
+	var cfg fiber.Config
+	cfg.Services = append(cfg.Services, dbSrv)
 
-	migrator, err := migrate.NewWithInstance("sqlite", source, "", driver)
-	if err != nil {
-		log.Fatal(err)
-	}
+	app := fiber.New(cfg)
+	app.State().Set("signingKey", []byte(env.Must(env.Get("SIGNING_KEY"))))
+	app.State().Set("accessExpiry", time.Hour)
+	app.State().Set("refreshExpiry", 60*24*time.Hour)
 
-	if err := migrator.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		log.Fatal(err)
-	}
-
-	signingKey := env.Must(env.Get("SIGNING_KEY"))
-
-	a := app.New(db, app.WithSigningKey(signingKey))
+	routes.Register(app)
 
 	addr := ":8000"
-	fmt.Printf("Listening on %s\n", addr)
-	if err := a.Listen(addr); err != nil {
+	if err := app.Listen(addr); err != nil {
 		log.Fatal(err)
 	}
 }

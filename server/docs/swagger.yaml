@@ -1,0 +1,295 @@
+definitions:
+  models.Access:
+    properties:
+      accessToken:
+        type: string
+      expiry:
+        type: string
+      refreshToken:
+        type: string
+    type: object
+  models.Family:
+    properties:
+      createdAt:
+        type: string
+      createdBy:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.FamilyMember:
+    properties:
+      createdAt:
+        type: string
+      family:
+        type: string
+      user:
+        type: string
+    type: object
+  models.NewFamily:
+    properties:
+      name:
+        type: string
+    type: object
+  models.NewUser:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+    type: object
+  models.SignIn:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  models.UpdateUser:
+    properties:
+      firstName:
+        type: string
+      lastName:
+        type: string
+    type: object
+  models.User:
+    properties:
+      avatar:
+        type: string
+      createdAt:
+        type: string
+      email:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Web API for Tribe Tracker
+  title: Tribe Tracker API
+  version: 1.0.0
+paths:
+  /api/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh an existing token.
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SignIn'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User access and refresh tokens
+          schema:
+            $ref: '#/definitions/models.Access'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: RefreshToken
+      tags:
+      - Auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user.
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created user access and refresh tokens
+          schema:
+            $ref: '#/definitions/models.Access'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "409":
+          description: Email already in use
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Register user
+      tags:
+      - Auth
+  /api/auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in to an existing account.
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SignIn'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User access and refresh tokens
+          schema:
+            $ref: '#/definitions/models.Access'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: User not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Sign in
+      tags:
+      - Auth
+  /api/families:
+    post:
+      consumes:
+      - application/json
+      description: Create a new location.
+      parameters:
+      - description: Family details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewFamily'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created family
+          schema:
+            $ref: '#/definitions/models.Family'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create location
+      tags:
+      - Location
+  /api/families/{familyId}/members:
+    post:
+      description: Join a family.
+      parameters:
+      - description: Family ID
+        in: path
+        name: familyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created family member
+          schema:
+            $ref: '#/definitions/models.FamilyMember'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Family not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create family member
+      tags:
+      - Family
+  /api/users/me:
+    patch:
+      consumes:
+      - application/json
+      description: Update the calling user.
+      parameters:
+      - description: User details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Updated user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "409":
+          description: Email already in use
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Update me
+      tags:
+      - User
+swagger: "2.0"

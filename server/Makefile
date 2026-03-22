@@ -1,4 +1,4 @@
-API := cmd/api/main.go
+API := cmd/main.go
 BIN := bin/go-app-template
 COMPOSE := docker compose
 DATA := .data
@@ -16,7 +16,8 @@ clean:
 	rm -rf $(BIN) $(DATA)
 
 docs:
-	$(GO) run $(DOCS) docs/openapi.yaml
+	swag fmt
+	swag init -g $(API) --outputTypes go,yaml
 
 down:
 	$(COMPOSE) down --remove-orphans
