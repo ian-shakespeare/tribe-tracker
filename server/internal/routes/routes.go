@@ -31,8 +31,8 @@ func Register(r fiber.Router) {
 }
 
 func getUserId(c fiber.Ctx) (uuid.UUID, *fiber.Error) {
-	userIdStr := c.Get("User-Id")
-	if userIdStr == "" {
+	userIdStr, ok := c.Locals("User-Id").(string)
+	if !ok || userIdStr == "" {
 		return uuid.Nil, fiber.NewError(http.StatusUnauthorized, "Must be signed in to access this route.")
 	}
 

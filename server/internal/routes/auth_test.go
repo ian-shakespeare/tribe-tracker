@@ -178,7 +178,7 @@ func TestRefreshToken(t *testing.T) {
 		},
 		{
 			name:         "invalid refresh",
-			expectStatus: http.StatusUnauthorized,
+			expectStatus: http.StatusBadRequest,
 			buildRefreshToken: func(t *testing.T, a *fiber.App) string {
 				return ""
 			},

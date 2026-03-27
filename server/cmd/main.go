@@ -15,12 +15,16 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const dataDir = "data"
+const (
+	dataDir    = "data"
+	storageDir = "storage"
+)
 
 func setupDirectories(baseDir string) error {
 	dirs := []string{
 		baseDir,
 		filepath.Join(baseDir, dataDir),
+		filepath.Join(baseDir, storageDir),
 	}
 
 	for _, dir := range dirs {
@@ -89,8 +93,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	storageSrv := services.NewStorage(filepath.Join(baseDir, storageDir))
+
 	var cfg fiber.Config
 	cfg.Services = append(cfg.Services, dbSrv)
+	cfg.Services = append(cfg.Services, storageSrv)
 
 	app := fiber.New(cfg)
 	app.State().Set("signingKey", []byte(env.Must(env.Get("SIGNING_KEY"))))

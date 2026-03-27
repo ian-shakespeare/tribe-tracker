@@ -63,12 +63,6 @@ func createFamily(c fiber.Ctx) error {
 //	@Failure		500			{string}	string				"Server error"
 //	@Router			/api/families/{familyId}/members [post]
 func createFamilyMember(c fiber.Ctx) error {
-	var nf models.NewFamily
-
-	if err := json.Unmarshal(c.Body(), &nf); err != nil {
-		return c.Status(http.StatusBadRequest).SendString("Invalid request body.")
-	}
-
 	dbSrv, ok := fiber.GetService[*services.DB](c.App().State(), services.DBName)
 	if !ok {
 		return c.Status(http.StatusInternalServerError).SendString("Unable to retrieve database service.")

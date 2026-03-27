@@ -21,7 +21,7 @@ func Authorize(c fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).SendString("Unable to retrieve signing key.")
 	}
 
-	bearer := c.Get("Authorization")
+	bearer := c.Get(fiber.HeaderAuthorization)
 	tokenParts := strings.Split(bearer, "Bearer ")
 	if len(tokenParts) < 2 {
 		return c.Status(http.StatusUnauthorized).SendString("Invalid token header.")
@@ -47,7 +47,7 @@ func Authorize(c fiber.Ctx) error {
 		return c.Status(http.StatusUnauthorized).SendString("User not found.")
 	}
 
-	c.Set("User-Id", user.UserUuid.String())
+	c.Locals("User-Id", user.UserUuid.String())
 
 	return c.Next()
 }

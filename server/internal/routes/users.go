@@ -46,5 +46,5 @@ func updateMe(c fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(http.StatusCreated).JSON(user)
+	return c.Status(http.StatusOK).JSON(user)
 }
