@@ -27,4 +27,4 @@ join locations l
   on u.user_id = l.user_id
 where me.user_uuid = ?
   and l.created_at > sqlc.arg(created_after)
-group by l.user;
+group by l.user_id;

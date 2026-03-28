@@ -24,7 +24,7 @@ import (
 //	@Router			/api/families [post]
 func getSyncData(c fiber.Ctx) error {
 	afterStr := c.Query("after")
-	after, err := time.Parse(afterStr, time.RFC3339)
+	after, err := time.Parse(time.RFC3339, afterStr)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).SendString("Invalid after date.")
 	}

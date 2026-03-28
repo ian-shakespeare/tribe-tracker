@@ -33,7 +33,8 @@ func Register(r fiber.Router) {
 	media := api.Group("media", middlewares.Authorize)
 	media.Post("/", createMedia)
 
-	api.Get("/sync", getSyncData, middlewares.Authorize)
+	sync := api.Group("sync", middlewares.Authorize)
+	sync.Get("/", getSyncData)
 }
 
 func getUserId(c fiber.Ctx) (uuid.UUID, error) {
