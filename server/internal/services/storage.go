@@ -7,11 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
 const StorageName = "file-storage"
@@ -60,7 +61,7 @@ func (s *Storage) State(ctx context.Context) (string, error) {
 		dirSize += info.Size()
 	}
 
-	state := fmt.Sprintf("File count: %d\nDirectory size: %d", fileCount, dirSize)
+	state := fmt.Sprintf("File count: %d, Directory size: %d", fileCount, dirSize)
 	return state, nil
 }
 
@@ -68,52 +69,51 @@ func (s *Storage) Terminate(ctx context.Context) error {
 	return nil
 }
 
-func (s *Storage) CreateFile(r io.Reader) (uuid.UUID, error) {
-	id := uuid.New()
+func (s *Storage) CreateFile(contentType string, r io.Reader) (models.Media, error) {
+	var meta models.Media
+	meta.ID = uuid.NewString()
+	meta.ContentType = contentType
 
 	b := make([]byte, 512)
 	if _, err := r.Read(b); err != nil && !errors.Is(err, io.EOF) {
-		return id, err
+		return meta, err
 	}
 
-	contentType := http.DetectContentType(b)
-
-	fout, err := os.Create(id.String())
+	p := filepath.Join(s.dir, meta.ID)
+	fout, err := os.Create(p)
 	if err != nil {
-		return id, err
+		return meta, err
 	}
 
 	n, err := io.Copy(fout, io.MultiReader(bytes.NewReader(b), r))
 	_ = fout.Close()
 	if err != nil {
-		_ = os.Remove(id.String())
-		return id, err
+		_ = os.Remove(p)
+		return meta, err
 	}
 
-	meta := FileMetaData{
-		ContentType: contentType,
-		Size:        n,
-		CreatedAt:   time.Now(),
-	}
+	meta.Size = n
+	meta.CreatedAt = time.Now()
 
 	mb, err := json.Marshal(meta)
 	if err != nil {
-		_ = os.Remove(id.String())
-		return id, err
+		_ = os.Remove(p)
+		return meta, err
 	}
 
-	if err := os.WriteFile(id.String()+".meta.json", mb, 0o666); err != nil {
-		_ = os.Remove(id.String())
-		return id, err
+	if err := os.WriteFile(p+".meta.json", mb, 0o666); err != nil {
+		_ = os.Remove(p)
+		return meta, err
 	}
 
-	return id, err
+	return meta, err
 }
 
 func (s *Storage) GetFile(id uuid.UUID) (File, error) {
 	var f File
 
-	mb, err := os.ReadFile(id.String() + ".meta.json")
+	p := filepath.Join(s.dir, id.String())
+	mb, err := os.ReadFile(p + ".meta.json")
 	if err != nil {
 		return f, err
 	}
@@ -122,6 +122,6 @@ func (s *Storage) GetFile(id uuid.UUID) (File, error) {
 		return f, err
 	}
 
-	f.Content, err = os.Open(id.String())
+	f.Content, err = os.Open(p)
 	return f, err
 }

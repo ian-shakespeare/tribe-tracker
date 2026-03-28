@@ -30,6 +30,13 @@ type Location struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type Media struct {
+	ID          string    `json:"id"`
+	ContentType string    `json:"contentType"`
+	Size        int64     `json:"size"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
 type NewFamily struct {
 	Name string `json:"name"`
 }

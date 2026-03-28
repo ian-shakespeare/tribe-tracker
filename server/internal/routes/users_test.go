@@ -81,6 +81,14 @@ func TestUpdateMe(t *testing.T) {
 				return registerUser(t, a, "update-me-last-long@email.com", "password", "john", "doe")
 			},
 		},
+		{
+			name:         "unauthorized",
+			inputBody:    `{"firstName":"Johnny","lastName":"Dough"}`,
+			expectStatus: http.StatusUnauthorized,
+			buildAccess: func(t *testing.T, _ *fiber.App) models.Access {
+				return models.Access{}
+			},
+		},
 	}
 
 	for _, tc := range testCases {

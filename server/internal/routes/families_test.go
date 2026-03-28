@@ -49,6 +49,14 @@ func TestCreateFamily(t *testing.T) {
 				return registerUser(t, a, "create-family-too-long@email.com", "password", "john", "doe")
 			},
 		},
+		{
+			name:         "unauthorized",
+			inputBody:    `{"name":"The Doe Family"}`,
+			expectStatus: http.StatusUnauthorized,
+			buildAccess: func(t *testing.T, _ *fiber.App) models.Access {
+				return models.Access{}
+			},
+		},
 	}
 
 	for _, tc := range testCases {

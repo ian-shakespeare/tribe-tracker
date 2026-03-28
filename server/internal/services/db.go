@@ -61,7 +61,7 @@ func (d *DB) String() string {
 
 func (d *DB) State(ctx context.Context) (string, error) {
 	stats := d.db.Stats()
-	state := fmt.Sprintf("Active connections: %d\nIdle connections: %d", stats.InUse, stats.Idle)
+	state := fmt.Sprintf("Active connections: %d, Idle connections: %d", stats.InUse, stats.Idle)
 	return state, nil
 }
 

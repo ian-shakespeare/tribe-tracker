@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 	"time"
 
@@ -22,8 +23,11 @@ func createServer(t *testing.T) *fiber.App {
 	dbSrv, err := services.NewDB(":memory:")
 	require.NoError(t, err)
 
+	storageSrv := services.NewStorage(os.TempDir())
+
 	var cfg fiber.Config
 	cfg.Services = append(cfg.Services, dbSrv)
+	cfg.Services = append(cfg.Services, storageSrv)
 
 	a := fiber.New(cfg)
 	a.State().Set("refreshExpiry", 60*24*time.Hour)

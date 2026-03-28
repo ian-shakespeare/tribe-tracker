@@ -4,30 +4,33 @@ import (
 	"net/http"
 
 	"github.com/gofiber/fiber/v3"
+	recoverer "github.com/gofiber/fiber/v3/middleware/recover"
 	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/middlewares"
 )
 
 func Register(r fiber.Router) {
 	api := r.Group("/api")
+	api.Use(recoverer.New())
 
 	auth := api.Group("auth")
 	auth.Post("/register", registerUser)
 	auth.Post("/sign-in", signIn)
 	auth.Post("/refresh", refreshToken)
 
-	users := api.Group("users")
-	users.Use(middlewares.Authorize)
+	users := api.Group("users", middlewares.Authorize)
 	users.Patch("/me", updateMe)
 
-	families := api.Group("families")
-	families.Use(middlewares.Authorize)
+	families := api.Group("families", middlewares.Authorize)
 	families.Post("/", createFamily)
 	families.Post("/:familyId/members", createFamilyMember)
 
-	locations := api.Group("locations")
-	locations.Use(middlewares.Authorize)
+	locations := api.Group("locations", middlewares.Authorize)
 	locations.Post("/", createLocation)
+
+	media := api.Group("media", middlewares.Authorize)
+	// media.Get("/:mediaId", nil)
+	media.Post("/", createMedia)
 }
 
 func getUserId(c fiber.Ctx) (uuid.UUID, *fiber.Error) {
