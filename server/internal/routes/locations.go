@@ -22,7 +22,7 @@ import (
 //	@Failure		400		{string}	string				"Bad request"
 //	@Failure		401		{string}	string				"Unauthorized"
 //	@Failure		500		{string}	string				"Server error"
-//	@Router			/api/families [post]
+//	@Router			/api/locations [post]
 func createLocation(c fiber.Ctx) error {
 	var nl models.NewLocation
 

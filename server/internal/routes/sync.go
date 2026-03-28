@@ -14,14 +14,14 @@ import (
 //
 //	@Summary		Get sync data
 //	@Description	Get recent sync data.
-//	@Tags			Location
+//	@Tags			Sync
 //	@Produce		json
-//	@Param			after	query		string	true	"After"
-//	@Success		200		{object}	models.SyncData		"Sync data"
-//	@Failure		400		{string}	string				"Bad request"
-//	@Failure		401		{string}	string				"Unauthorized"
-//	@Failure		500		{string}	string				"Server error"
-//	@Router			/api/families [post]
+//	@Param			after	query		string			true	"After"
+//	@Success		200		{object}	models.SyncData	"Sync data"
+//	@Failure		400		{string}	string			"Bad request"
+//	@Failure		401		{string}	string			"Unauthorized"
+//	@Failure		500		{string}	string			"Server error"
+//	@Router			/api/sync [get]
 func getSyncData(c fiber.Ctx) error {
 	afterStr := c.Query("after")
 	after, err := time.Parse(time.RFC3339, afterStr)

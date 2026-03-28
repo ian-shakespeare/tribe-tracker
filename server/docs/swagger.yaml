@@ -16,6 +16,8 @@ definitions:
         type: string
       id:
         type: string
+      isDeleted:
+        type: boolean
       name:
         type: string
       updatedAt:
@@ -27,6 +29,19 @@ definitions:
         type: string
       family:
         type: string
+      user:
+        type: string
+    type: object
+  models.Location:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      lat:
+        type: number
+      lon:
+        type: number
       user:
         type: string
     type: object
@@ -64,6 +79,25 @@ definitions:
       password:
         type: string
     type: object
+  models.SyncData:
+    properties:
+      families:
+        items:
+          $ref: '#/definitions/models.Family'
+        type: array
+      familyMembers:
+        items:
+          $ref: '#/definitions/models.FamilyMember'
+        type: array
+      locations:
+        items:
+          $ref: '#/definitions/models.Location'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+    type: object
   models.UpdateUser:
     properties:
       firstName:
@@ -83,6 +117,8 @@ definitions:
         type: string
       id:
         type: string
+      isDeleted:
+        type: boolean
       lastName:
         type: string
       updatedAt:
@@ -200,7 +236,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new location.
+      description: Create a new family.
       parameters:
       - description: Family details
         in: body
@@ -227,9 +263,9 @@ paths:
           description: Server error
           schema:
             type: string
-      summary: Create location
+      summary: Create family
       tags:
-      - Location
+      - Family
   /api/families/{familyId}/members:
     post:
       description: Join a family.
@@ -265,6 +301,40 @@ paths:
       summary: Create family member
       tags:
       - Family
+  /api/locations:
+    post:
+      consumes:
+      - application/json
+      description: Create a new location.
+      parameters:
+      - description: Family details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewFamily'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Newly created family
+          schema:
+            $ref: '#/definitions/models.Family'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create location
+      tags:
+      - Location
   /api/media:
     post:
       consumes:
@@ -329,6 +399,37 @@ paths:
       summary: Get media
       tags:
       - Media
+  /api/sync:
+    get:
+      description: Get recent sync data.
+      parameters:
+      - description: After
+        in: query
+        name: after
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Sync data
+          schema:
+            $ref: '#/definitions/models.SyncData'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get sync data
+      tags:
+      - Sync
   /api/users/me:
     patch:
       consumes:

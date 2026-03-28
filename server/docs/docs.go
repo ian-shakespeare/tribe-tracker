@@ -173,7 +173,7 @@ const docTemplate = `{
         },
         "/api/families": {
             "post": {
-                "description": "Create a new location.",
+                "description": "Create a new family.",
                 "consumes": [
                     "application/json"
                 ],
@@ -181,9 +181,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Location"
+                    "Family"
                 ],
-                "summary": "Create location",
+                "summary": "Create family",
                 "parameters": [
                     {
                         "description": "Family details",
@@ -263,6 +263,58 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Family not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/locations": {
+            "post": {
+                "description": "Create a new location.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Location"
+                ],
+                "summary": "Create location",
+                "parameters": [
+                    {
+                        "description": "Family details",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewFamily"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Newly created family",
+                        "schema": {
+                            "$ref": "#/definitions/models.Family"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "string"
                         }
@@ -373,6 +425,53 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/sync": {
+            "get": {
+                "description": "Get recent sync data.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sync"
+                ],
+                "summary": "Get sync data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "After",
+                        "name": "after",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Sync data",
+                        "schema": {
+                            "$ref": "#/definitions/models.SyncData"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/users/me": {
             "patch": {
                 "description": "Update the calling user.",
@@ -459,6 +558,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "isDeleted": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -475,6 +577,26 @@ const docTemplate = `{
                 },
                 "family": {
                     "type": "string"
+                },
+                "user": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Location": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lon": {
+                    "type": "number"
                 },
                 "user": {
                     "type": "string"
@@ -534,6 +656,35 @@ const docTemplate = `{
                 }
             }
         },
+        "models.SyncData": {
+            "type": "object",
+            "properties": {
+                "families": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Family"
+                    }
+                },
+                "familyMembers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.FamilyMember"
+                    }
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Location"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.User"
+                    }
+                }
+            }
+        },
         "models.UpdateUser": {
             "type": "object",
             "properties": {
@@ -562,6 +713,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "string"
+                },
+                "isDeleted": {
+                    "type": "boolean"
                 },
                 "lastName": {
                     "type": "string"
