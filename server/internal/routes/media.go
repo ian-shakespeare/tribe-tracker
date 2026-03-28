@@ -1,9 +1,11 @@
 package routes
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/handlers"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/services"
 	_ "github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
@@ -16,11 +18,11 @@ import (
 //	@Tags			Media
 //	@Accept			multipart/form-data
 //	@Produce		json
-//	@Param			file	formData		file	true	"File"
-//	@Success		201		{object}	models.Media			"Created media"
-//	@Failure		400		{string}	string				"Bad request"
-//	@Failure		401		{string}	string				"Unauthorized"
-//	@Failure		500		{string}	string				"Server error"
+//	@Param			file	formData	file			true	"File"
+//	@Success		201		{object}	models.Media	"Created media"
+//	@Failure		400		{string}	string			"Bad request"
+//	@Failure		401		{string}	string			"Unauthorized"
+//	@Failure		500		{string}	string			"Server error"
 //	@Router			/api/media [post]
 func createMedia(c fiber.Ctx) error {
 	form, err := c.MultipartForm()
@@ -51,4 +53,42 @@ func createMedia(c fiber.Ctx) error {
 	}
 
 	return c.Status(http.StatusCreated).JSON(media)
+}
+
+// getMedia godoc
+//
+//	@Summary		Get media
+//	@Description	Get media file.
+//	@Tags			Media
+//	@Produce		image/png
+//	@Param			mediaId	path		string	true	"Media ID"
+//	@Success		200		{file}		binary	"Media file"
+//	@Failure		400		{string}	string	"Bad request"
+//	@Failure		404		{string}	string	"Media not found"
+//	@Failure		500		{string}	string	"Server error"
+//	@Router			/api/media/{mediaId} [get]
+func getMedia(c fiber.Ctx) error {
+	mediaIdStr := c.Params("mediaId")
+	mediaId, err := uuid.Parse(mediaIdStr)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).SendString("Invalid media ID.")
+	}
+
+	storageSrv, ok := fiber.GetService[*services.Storage](c.App().State(), services.StorageName)
+	if !ok {
+		return c.Status(http.StatusInternalServerError).SendString("Failed to get storage service.")
+	}
+
+	file, err := handlers.GetMedia(c.Context(), storageSrv, mediaId)
+	if err != nil {
+		return c.Status(http.StatusNotFound).SendString("Media not found.")
+	}
+	defer file.Close()
+
+	c.Set("Content-Type", file.ContentType)
+	if _, err := io.Copy(c.Response().BodyWriter(), file); err != nil {
+		return c.Status(http.StatusInternalServerError).SendString("Failed to serve media.")
+	}
+
+	return nil
 }

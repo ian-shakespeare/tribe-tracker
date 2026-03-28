@@ -11,7 +11,7 @@ import (
 	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
-func CreateLocation(ctx context.Context, q *database.Queries, userId uuid.UUID, nl models.NewLocation) (models.Location, *fiber.Error) {
+func CreateLocation(ctx context.Context, q *database.Queries, userId uuid.UUID, nl models.NewLocation) (models.Location, error) {
 	var l models.Location
 
 	created, err := q.CreateLocation(ctx, database.CreateLocationParams{

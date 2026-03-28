@@ -1,7 +1,7 @@
 create table if not exists families (
   family_id integer primary key,
   family_uuid blob not null check (length(family_uuid) = 36),
-  name varchar(64) not null check (length(name) >= 2),
+  name text not null check (2 <= length(name) and length(name) <= 64),
   created_by int references users (user_id) on delete set null,
   created_at integer not null default (unixepoch()),
   updated_at integer not null default (unixepoch()),

@@ -28,12 +28,15 @@ func Register(r fiber.Router) {
 	locations := api.Group("locations", middlewares.Authorize)
 	locations.Post("/", createLocation)
 
+	api.Get("/media/:mediaId", getMedia)
+
 	media := api.Group("media", middlewares.Authorize)
-	// media.Get("/:mediaId", nil)
 	media.Post("/", createMedia)
+
+	api.Get("/sync", getSyncData, middlewares.Authorize)
 }
 
-func getUserId(c fiber.Ctx) (uuid.UUID, *fiber.Error) {
+func getUserId(c fiber.Ctx) (uuid.UUID, error) {
 	userIdStr, ok := c.Locals("User-Id").(string)
 	if !ok || userIdStr == "" {
 		return uuid.Nil, fiber.NewError(http.StatusUnauthorized, "Must be signed in to access this route.")

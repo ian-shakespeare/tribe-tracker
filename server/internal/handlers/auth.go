@@ -21,7 +21,7 @@ func RegisterUser(
 	signingKey []byte,
 	accessExpiry, refreshExpiry time.Duration,
 	nu models.NewUser,
-) (models.Access, *fiber.Error) {
+) (models.Access, error) {
 	var a models.Access
 
 	if len(nu.Email) < 5 {
@@ -103,7 +103,7 @@ func SignIn(
 	signingKey []byte,
 	accessExpiry, refreshExpiry time.Duration,
 	si models.SignIn,
-) (models.Access, *fiber.Error) {
+) (models.Access, error) {
 	var a models.Access
 
 	user, err := q.GetUserByEmail(ctx, si.Email)
@@ -149,7 +149,7 @@ func RefreshToken(
 	signingKey []byte,
 	accessExpiry, refreshExpiry time.Duration,
 	r models.Refresh,
-) (models.Access, *fiber.Error) {
+) (models.Access, error) {
 	var a models.Access
 
 	refreshToken, err := uuid.Parse(r.RefreshToken)

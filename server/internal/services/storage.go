@@ -17,15 +17,17 @@ import (
 
 const StorageName = "file-storage"
 
-type FileMetaData struct {
-	ContentType string    `json:"contentType"`
-	Size        int64     `json:"size"`
-	CreatedAt   time.Time `json:"createdAt"`
+type File struct {
+	models.Media
+	Content io.ReadCloser
 }
 
-type File struct {
-	FileMetaData
-	Content io.ReadCloser
+func (f File) Read(p []byte) (n int, err error) {
+	return f.Content.Read(p)
+}
+
+func (f File) Close() error {
+	return f.Content.Close()
 }
 
 type Storage struct {
@@ -118,7 +120,7 @@ func (s *Storage) GetFile(id uuid.UUID) (File, error) {
 		return f, err
 	}
 
-	if err := json.Unmarshal(mb, &f.FileMetaData); err != nil {
+	if err := json.Unmarshal(mb, &f.Media); err != nil {
 		return f, err
 	}
 

@@ -11,7 +11,7 @@ import (
 	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
-func UpdateMe(ctx context.Context, q *database.Queries, userId uuid.UUID, uu models.UpdateUser) (models.User, *fiber.Error) {
+func UpdateMe(ctx context.Context, q *database.Queries, userId uuid.UUID, uu models.UpdateUser) (models.User, error) {
 	var u models.User
 	var firstName, lastName *string
 

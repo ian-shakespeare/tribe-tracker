@@ -9,12 +9,14 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/disintegration/imaging"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gen2brain/heic"
 	"github.com/gofiber/fiber/v3"
-	"github.com/ian-shakespeare/tribe-tracker/server/internal/resize"
+	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/services"
 	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
+	"golang.org/x/image/webp"
 )
 
 func CreateMedia(ctx context.Context, s *services.Storage, r io.Reader) (models.Media, error) {
@@ -38,17 +40,20 @@ func CreateMedia(ctx context.Context, s *services.Storage, r io.Reader) (models.
 		img, err = png.Decode(mr)
 	case mt.Is("image/heic"), mt.Is("image/heif"):
 		img, err = heic.Decode(mr)
+	case mt.Is("image/webp"):
+		img, err = webp.Decode(mr)
 	default:
-		return m, fiber.NewError(http.StatusUnsupportedMediaType, "Must be a JPEG, PNG, or HEIC file.")
+		return m, fiber.NewError(http.StatusUnsupportedMediaType, "Must be a JPEG, PNG, HEIC, or WEBP file.")
 	}
 	if err != nil {
 		return m, fiber.NewError(http.StatusBadRequest, "Invalid image file.")
 	}
 
-	resized := resize.NearestNeighbor(img)
+	resized := imaging.Resize(img, 500, 500, imaging.Linear)
+	blurred := imaging.Blur(resized, 0.75)
 
 	b.Reset()
-	if err := png.Encode(b, resized); err != nil {
+	if err := png.Encode(b, blurred); err != nil {
 		return m, fiber.NewError(http.StatusInternalServerError, "Failed to convert image.")
 	}
 
@@ -58,4 +63,8 @@ func CreateMedia(ctx context.Context, s *services.Storage, r io.Reader) (models.
 	}
 
 	return m, nil
+}
+
+func GetMedia(ctx context.Context, s *services.Storage, id uuid.UUID) (services.File, error) {
+	return s.GetFile(id)
 }

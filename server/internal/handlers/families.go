@@ -15,7 +15,7 @@ import (
 	sqlite3 "modernc.org/sqlite/lib"
 )
 
-func CreateFamily(ctx context.Context, q *database.Queries, userId uuid.UUID, nf models.NewFamily) (models.Family, *fiber.Error) {
+func CreateFamily(ctx context.Context, q *database.Queries, userId uuid.UUID, nf models.NewFamily) (models.Family, error) {
 	var f models.Family
 
 	if len(nf.Name) < 2 {
@@ -51,7 +51,7 @@ func CreateFamily(ctx context.Context, q *database.Queries, userId uuid.UUID, nf
 	return f, nil
 }
 
-func CreateFamilyMember(ctx context.Context, q *database.Queries, familyId, userId uuid.UUID) (models.FamilyMember, *fiber.Error) {
+func CreateFamilyMember(ctx context.Context, q *database.Queries, familyId, userId uuid.UUID) (models.FamilyMember, error) {
 	var fm models.FamilyMember
 
 	created, err := q.CreateFamilyMember(ctx, database.CreateFamilyMemberParams{

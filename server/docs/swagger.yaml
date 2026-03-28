@@ -30,6 +30,17 @@ definitions:
       user:
         type: string
     type: object
+  models.Media:
+    properties:
+      contentType:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      size:
+        type: integer
+    type: object
   models.NewFamily:
     properties:
       name:
@@ -254,6 +265,70 @@ paths:
       summary: Create family member
       tags:
       - Family
+  /api/media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new media file.
+      parameters:
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created media
+          schema:
+            $ref: '#/definitions/models.Media'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Create media
+      tags:
+      - Media
+  /api/media/{mediaId}:
+    get:
+      description: Get media file.
+      parameters:
+      - description: Media ID
+        in: path
+        name: mediaId
+        required: true
+        type: string
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: Media file
+          schema:
+            type: file
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "404":
+          description: Media not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get media
+      tags:
+      - Media
   /api/users/me:
     patch:
       consumes:
