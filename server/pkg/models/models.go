@@ -14,6 +14,7 @@ type Family struct {
 	CreatedBy string    `json:"createdBy"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	IsDeleted *bool     `json:"isDeleted,omitempty"`
 }
 
 type FamilyMember struct {
@@ -62,6 +63,13 @@ type SignIn struct {
 	Password string `json:"password"`
 }
 
+type SyncData struct {
+	Users         []User         `json:"users"`
+	Families      []Family       `json:"families"`
+	FamilyMembers []FamilyMember `json:"familyMembers"`
+	Locations     []Location     `json:"locations"`
+}
+
 type UpdateUser struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
@@ -75,4 +83,5 @@ type User struct {
 	Avatar    *string   `json:"avatar"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	IsDeleted *bool     `json:"isDeleted,omitempty"`
 }
