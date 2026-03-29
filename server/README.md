@@ -1,6 +1,6 @@
 # Tribe Tracker
 
-A template Go web application using SQLite.
+A Go service using SQLite.
 
 ## Getting Started
 
@@ -11,7 +11,7 @@ This project uses [Migrate](https://github.com/golang-migrate/migrate) to create
 migrate create -dir database/migrations -ext sql $MIGRATION_NAME
 
 # Generate database handlers
-sqlc generate
+./scripts/generate.sh
 
 # Start the server
 make run
