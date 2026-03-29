@@ -3,9 +3,10 @@ import { useLiveQuery } from "../../db/liveQuery";
 import { getUserLocations } from "../../models/user";
 import { toTitleCase } from "../../utils/strings";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { useState } from "react";
 import UserHighlight from "../../views/components/UserHighlight";
+import Animated, { FadeOut, SlideInUp } from "react-native-reanimated";
 
 export default function MapScreen() {
   const { top } = useSafeAreaInsets();
@@ -20,7 +21,9 @@ export default function MapScreen() {
   return (
     <>
       {selectedLocation && (
-        <View
+        <Animated.View
+          entering={SlideInUp}
+          exiting={FadeOut}
           style={[
             styles.highlightContainer,
             {
@@ -28,8 +31,11 @@ export default function MapScreen() {
             },
           ]}
         >
-          <UserHighlight userLocation={selectedLocation} />
-        </View>
+          <UserHighlight
+            userLocation={selectedLocation}
+            onPress={() => setSelectedLocationId(null)}
+          />
+        </Animated.View>
       )}
       <PlatformMap
         onMarkerClick={setSelectedLocationId}

@@ -6,13 +6,17 @@ import { formatTimeDelta, toTitleCase } from "../../utils/strings";
 
 type UserHighlightProps = {
   userLocation: UserLocation;
+  onPress?: () => void;
 };
 
-export default function UserHighlight({ userLocation }: UserHighlightProps) {
+export default function UserHighlight({
+  userLocation,
+  onPress,
+}: UserHighlightProps) {
   const { firstName, lastName, avatar, recordedAt } = userLocation;
 
   return (
-    <Card>
+    <Card onPress={onPress}>
       <View style={styles.container}>
         <View>
           <AvatarHero
