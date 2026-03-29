@@ -23,6 +23,10 @@ type FamilyMember struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+type Health struct {
+	Status string `json:"status"`
+}
+
 type Location struct {
 	ID        string    `json:"id"`
 	User      string    `json:"user"`
@@ -48,10 +52,11 @@ type NewLocation struct {
 }
 
 type NewUser struct {
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Password  string `json:"password"`
+	Email           string `json:"email"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
 }
 
 type Refresh struct {
@@ -73,6 +78,7 @@ type SyncData struct {
 type UpdateUser struct {
 	FirstName *string `json:"firstName,omitempty"`
 	LastName  *string `json:"lastName,omitempty"`
+	Avatar    *string `json:"avatar,omitempty"`
 }
 
 type User struct {

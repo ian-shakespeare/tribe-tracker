@@ -13,17 +13,23 @@ func Register(r fiber.Router) {
 	api := r.Group("/api")
 	api.Use(recoverer.New())
 
+	api.Get("/health", getHealth)
+
 	auth := api.Group("auth")
 	auth.Post("/register", registerUser)
 	auth.Post("/sign-in", signIn)
 	auth.Post("/refresh", refreshToken)
 
 	users := api.Group("users", middlewares.Authorize)
+	users.Get("/me", getMe)
 	users.Patch("/me", updateMe)
 
 	families := api.Group("families", middlewares.Authorize)
 	families.Post("/", createFamily)
+	families.Get("/:familyId", getFamily)
 	families.Post("/:familyId/members", createFamilyMember)
+	families.Get("/:familyId/members", getFamilyMembers)
+	families.Get("/:familyId/members/locations", getFamilyMemberLocations)
 
 	locations := api.Group("locations", middlewares.Authorize)
 	locations.Post("/", createLocation)

@@ -17,8 +17,8 @@ import (
 //	@Tags			Location
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		models.NewFamily	true	"Family details"
-//	@Success		201		{object}	models.Family		"Newly created family"
+//	@Param			request	body		models.NewLocation	true	"Family details"
+//	@Success		201		{object}	models.Location		"Newly created family"
 //	@Failure		400		{string}	string				"Bad request"
 //	@Failure		401		{string}	string				"Unauthorized"
 //	@Failure		500		{string}	string				"Server error"

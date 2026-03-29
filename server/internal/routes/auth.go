@@ -115,7 +115,7 @@ func signIn(c fiber.Ctx) error {
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		models.SignIn	true	"User details"
+//	@Param			request	body		models.Refresh	true	"Refresh token"
 //	@Success		201		{object}	models.Access	"User access and refresh tokens"
 //	@Failure		400		{string}	string			"Bad request"
 //	@Failure		404		{string}	string			"User not found"

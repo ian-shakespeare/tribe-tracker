@@ -39,7 +39,8 @@ where user_uuid = ?;
 -- name: UpdateUser :one
 update users
 set first_name = coalesce(lower(sqlc.narg(first_name)), first_name),
-  last_name = coalesce(lower(sqlc.narg(last_name)), last_name)
+  last_name = coalesce(lower(sqlc.narg(last_name)), last_name),
+  avatar = coalesce(sqlc.narg(avatar), avatar)
 where user_uuid = sqlc.arg(user_uuid)
 returning user_uuid,
   email,

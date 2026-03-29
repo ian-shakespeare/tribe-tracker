@@ -52,6 +52,10 @@ func RegisterUser(
 		return a, fiber.NewError(http.StatusBadRequest, "Last name must be less than 64 characters.")
 	}
 
+	if nu.Password != nu.PasswordConfirm {
+		return a, fiber.NewError(http.StatusBadRequest, "Passwords do not match.")
+	}
+
 	passwordDigest, err := bcrypt.GenerateFromPassword([]byte(nu.Password), 12)
 	if err != nil {
 		return a, fiber.NewError(http.StatusBadRequest, "Password must be less than 72 characters.")

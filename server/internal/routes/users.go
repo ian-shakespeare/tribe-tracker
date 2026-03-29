@@ -10,6 +10,37 @@ import (
 	"github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
+// getMe godoc
+//
+//	@Summary		Get me
+//	@Description	Get the calling user.
+//	@Tags			User
+//	@Produce		json
+//	@Success		200		{object}	models.User			"Calling user"
+//	@Failure		400		{string}	string				"Bad request"
+//	@Failure		401		{string}	string				"Unauthorized"
+//	@Failure		401		{string}	string				"Not found"
+//	@Failure		500		{string}	string				"Server error"
+//	@Router			/api/users/me [get]
+func getMe(c fiber.Ctx) error {
+	dbSrv, ok := fiber.GetService[*services.DB](c.App().State(), services.DBName)
+	if !ok {
+		return c.Status(http.StatusInternalServerError).SendString("Unable to retrieve database service.")
+	}
+
+	userId, err := getUserId(c)
+	if err != nil {
+		return err
+	}
+
+	user, err := handlers.GetMe(c.Context(), dbSrv.Queries, userId)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(user)
+}
+
 // updateMe godoc
 //
 //	@Summary		Update me

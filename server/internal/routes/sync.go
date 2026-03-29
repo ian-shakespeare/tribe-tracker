@@ -7,7 +7,6 @@ import (
 	"github.com/gofiber/fiber/v3"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/handlers"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/services"
-	_ "github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
 // getSyncData godoc

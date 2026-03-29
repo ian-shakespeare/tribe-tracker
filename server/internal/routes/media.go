@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/handlers"
 	"github.com/ian-shakespeare/tribe-tracker/server/internal/services"
-	_ "github.com/ian-shakespeare/tribe-tracker/server/pkg/models"
 )
 
 // createMedia godoc

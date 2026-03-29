@@ -13,7 +13,13 @@ import (
 )
 
 func GetSyncData(ctx context.Context, q *database.Queries, userId uuid.UUID, after time.Time) (models.SyncData, error) {
-	var sd models.SyncData
+	sd := models.SyncData{
+		Users:         []models.User{},
+		Families:      []models.Family{},
+		FamilyMembers: []models.FamilyMember{},
+		Locations:     []models.Location{},
+	}
+
 	var g errgroup.Group
 
 	g.Go(func() error {
