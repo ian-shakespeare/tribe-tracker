@@ -4,9 +4,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Tribe Tracker",
   slug: "tribe-tracker",
-  version: "0.1.0",
+  version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "dark",
+  scheme: "tribetracker",
   newArchEnabled: true,
   splash: {
     image: "./assets/splash-icon.png",
@@ -40,6 +41,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       },
     },
   },
+  experiments: {
+    typedRoutes: true,
+  },
   extra: {
     eas: {
       projectId: "1ca6b391-8089-4e22-9268-cb4b9e354cbc",
@@ -70,5 +74,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-sqlite",
     "expo-task-manager",
+    ["expo-router", { root: "src/routes" }],
+    [
+      "expo-camera",
+      {
+        cameraPermission: "Allow $(PRODUCT_NAME) to access your camera.",
+        barcodeScannerEnabled: true,
+      },
+    ],
   ],
 });

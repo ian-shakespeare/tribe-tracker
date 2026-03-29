@@ -1,39 +1,40 @@
-BIN := bin/tribetrackerserver
-CYCLO := gocyclo
-DATA := pb_data
+API := cmd/main.go
+BIN := bin/go-app-template
+COMPOSE := docker compose
+DATA := .data
+DOCS := cmd/docs/main.go
 GO := go
-LINT := golangci-lint
-MAIN := cmd/main.go
-command := serve
-cyclolevel := 15
+LINTER := golangci-lint
+RUN_FLAGS := -v
 
 all: run
 
-run:
-	$(GO) run $(MAIN) $(command)
-
 build:
-	$(GO) build -o $(BIN) $(MAIN)
+	$(GO) build -o $(BIN) $(API)
 
 clean:
 	rm -rf $(BIN) $(DATA)
 
-lint:
-	$(LINT) run ./...
+docs:
+	swag fmt
+	swag init -g $(API) --outputTypes go,yaml
+
+down:
+	$(COMPOSE) down --remove-orphans
 
 fmt:
 	$(GO) fmt ./...
 
-cyclo:
-	$(CYCLO) -over $(cyclolevel) .
+generate:
+	@./scripts/generate.sh
 
-test:
-	$(GO) test ./...
+lint: generate
+	$(LINTER) run ./...
 
-migration:
-	$(GO) run $(MAIN) migrate create $(migration_name)
+run:
+	$(GO) run $(API) $(RUN_FLAGS)
 
-migrate:
-	$(GO) run $(MAIN) migrate up
+test: generate
+	$(GO) test ./internal/... $(testargs)
 
-.PHONY: clean cyclo fmt lint test migration
+.PHONY: docs down lint run test up

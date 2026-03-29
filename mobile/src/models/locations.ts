@@ -3,7 +3,8 @@ import DB from "../db";
 export type Location = {
   id: string;
   user: string;
-  coordinates: { lat: number; lon: number };
+  lat: number;
+  lon: number;
   createdAt: Date;
 };
 
@@ -12,21 +13,24 @@ export async function upsertLocations(locations: Location[]) {
   INSERT INTO locations (
     id,
     user,
-    coordinates,
+    lat,
+    lon,
     createdAt
   ) VALUES (
-    $id, $user, $coordinates, $createdAt
+    $id, $user, $lat, $lon, $createdAt
   )
   ON CONFLICT (ID)
-  DO UPDATE SET coordinates = excluded.coordinates
+  DO UPDATE SET lat = excluded.lat,
+    lon = excluded.lon
   `);
 
   await Promise.all(
-    locations.map(({ id, user, coordinates, createdAt }) =>
+    locations.map(({ id, user, lat, lon, createdAt }) =>
       statement.executeAsync({
         $id: id,
         $user: user,
-        $coordinates: JSON.stringify(coordinates),
+        $lat: lat,
+        $lon: lon,
         $createdAt: createdAt.toISOString(),
       }),
     ),

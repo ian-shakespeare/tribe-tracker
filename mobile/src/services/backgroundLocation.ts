@@ -1,6 +1,6 @@
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
-import * as API from "../controllers/api";
+import api from "../services/api";
 
 const TASK_NAME = "BACKGROUND_LOCATION_TASK";
 
@@ -9,7 +9,7 @@ TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
     return;
   }
 
-  if (!API.isSignedIn()) {
+  if (!api.isAuthenticated) {
     return;
   }
 
@@ -22,9 +22,7 @@ TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
   const latest = locations[locations.length - 1];
   const { latitude, longitude } = latest.coords;
 
-  await API.createLocation(latitude, longitude).catch(() => {
-    /* couldn't reach the server */
-  });
+  await api.createLocation(latitude, longitude);
 });
 
 export async function startBackgroundTracking(): Promise<boolean> {

@@ -1,45 +1,93 @@
 package models
 
-import "github.com/pocketbase/pocketbase/tools/types"
+import "time"
 
-type User struct {
-	ID        string         `db:"id" json:"id"`
-	Email     string         `db:"email" json:"email"`
-	FirstName string         `db:"firstName" json:"firstName"`
-	LastName  string         `db:"lastName" json:"lastName"`
-	Avatar    string         `db:"avatar" json:"avatar"`
-	CreatedAt types.DateTime `db:"createdAt" json:"createdAt"`
-	UpdatedAt types.DateTime `db:"updatedAt" json:"updatedAt"`
-	IsDeleted bool           `db:"isDeleted" json:"isDeleted"`
+type Access struct {
+	AccessToken  string    `json:"accessToken"`
+	RefreshToken string    `json:"refreshToken"`
+	Expiry       time.Time `json:"expiry"`
 }
 
 type Family struct {
-	ID        string         `db:"id" json:"id"`
-	Name      string         `db:"name" json:"name"`
-	CreatedBy string         `db:"createdBy" json:"createdBy"`
-	CreatedAt types.DateTime `db:"createdAt" json:"createdAt"`
-	UpdatedAt types.DateTime `db:"updatedAt" json:"updatedAt"`
-	IsDeleted bool           `db:"isDeleted" json:"isDeleted"`
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	CreatedBy string    `json:"createdBy"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	IsDeleted *bool     `json:"isDeleted,omitempty"`
 }
 
 type FamilyMember struct {
-	ID        string         `db:"id" json:"id"`
-	User      string         `db:"user" json:"user"`
-	Family    string         `db:"family" json:"family"`
-	CreatedAt types.DateTime `db:"createdAt" json:"createdAt"`
+	User      string    `json:"user"`
+	Family    string    `json:"family"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
-type Invitation struct {
-	ID        string         `db:"id" json:"id"`
-	Sender    string         `db:"sender" json:"sender"`
-	Recipient string         `db:"recipient" json:"recipient"`
-	Family    string         `db:"family" json:"family"`
-	CreatedAt types.DateTime `db:"createdAt" json:"createdAt"`
+type Health struct {
+	Status string `json:"status"`
 }
 
 type Location struct {
-	ID          string         `db:"id" json:"id"`
-	User        string         `db:"user" json:"user"`
-	Coordinates string         `db:"coordinates" json:"coordinates"`
-	CreatedAt   types.DateTime `db:"createdAt" json:"createdAt"`
+	ID        string    `json:"id"`
+	User      string    `json:"user"`
+	Lat       float64   `json:"lat"`
+	Lon       float64   `json:"lon"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Media struct {
+	ID          string    `json:"id"`
+	ContentType string    `json:"contentType"`
+	Size        int64     `json:"size"`
+	CreatedAt   time.Time `json:"createdAt"`
+}
+
+type NewFamily struct {
+	Name string `json:"name"`
+}
+
+type NewLocation struct {
+	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
+}
+
+type NewUser struct {
+	Email           string `json:"email"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	Password        string `json:"password"`
+	PasswordConfirm string `json:"passwordConfirm"`
+}
+
+type Refresh struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+type SignIn struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type SyncData struct {
+	Users         []User         `json:"users"`
+	Families      []Family       `json:"families"`
+	FamilyMembers []FamilyMember `json:"familyMembers"`
+	Locations     []Location     `json:"locations"`
+}
+
+type UpdateUser struct {
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
+	Avatar    *string `json:"avatar,omitempty"`
+}
+
+type User struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	Avatar    *string   `json:"avatar"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+	IsDeleted *bool     `json:"isDeleted,omitempty"`
 }

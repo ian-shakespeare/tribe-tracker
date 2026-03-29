@@ -1,0 +1,212 @@
+import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Button,
+  Divider,
+  IconProps,
+  Layout,
+  List,
+  ListItem,
+  Toggle,
+  TopNavigation,
+  TopNavigationAction,
+  useTheme,
+} from "@ui-kitten/components";
+import BackArrowIcon from "../views/components/BackArrowIcon";
+import { Alert, StyleSheet, View } from "react-native";
+import { useSync } from "../views/contexts/Sync";
+import { ReactElement, useCallback, useEffect, useState } from "react";
+import { useLiveQuery } from "../db/liveQuery";
+import { getDatabaseSize } from "../models/meta";
+import { deleteAllLocations } from "../models/locations";
+import { deleteAllFamilyMembers } from "../models/familyMember";
+import { deleteAllFamilies } from "../models/family";
+import { deleteAllUsers } from "../models/user";
+import * as SecureStore from "expo-secure-store";
+import api from "../services/api";
+import { useToast } from "../views/contexts/Toast";
+import {
+  isTrackingActive,
+  startBackgroundTracking,
+  stopBackgroundTracking,
+} from "../services/backgroundLocation";
+import CheckmarkIcon from "../views/components/CheckmarkIcon";
+import { toTitleCase } from "../utils/strings";
+import CloseIcon from "../views/components/CloseIcon";
+
+type ListItemProps = {
+  title: string;
+  description: string;
+  accessoryRight?: (props?: IconProps) => ReactElement;
+};
+
+export default function SettingsScreen() {
+  const router = useRouter();
+  const theme = useTheme();
+  const toast = useToast();
+  const { lastSyncedAt, sync, resetSync } = useSync();
+  const query = useLiveQuery(getDatabaseSize);
+  const [backgroundTracking, setBackgroundTracking] = useState(false);
+  const [serverHealth, setServerHealth] = useState<
+    "loading" | "healthy" | "unhealthy"
+  >("loading");
+
+  useEffect(() => {
+    isTrackingActive().then(setBackgroundTracking);
+    api
+      .healthy()
+      .then(({ ok }) => setServerHealth(ok ? "healthy" : "unhealthy"));
+  }, []);
+
+  const handleToggleTracking = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        const started = await startBackgroundTracking();
+        if (!started) {
+          toast.danger(
+            "Location permission denied. Enable it in your device settings.",
+          );
+          return;
+        }
+        setBackgroundTracking(true);
+      } else {
+        await stopBackgroundTracking();
+        setBackgroundTracking(false);
+      }
+    } catch {
+      toast.danger("Failed to update background tracking.");
+    }
+  };
+
+  const handleResync = async () => {
+    try {
+      sync();
+    } catch (e) {
+      if (e instanceof Error) {
+        toast.danger(e.message);
+      }
+    }
+  };
+
+  const handlePurgeData = useCallback(async () => {
+    await stopBackgroundTracking();
+    await deleteAllLocations();
+    await deleteAllFamilyMembers();
+    await deleteAllFamilies();
+    await deleteAllUsers();
+    await resetSync();
+
+    api.signOut();
+    await SecureStore.deleteItemAsync("MY_USER_ID");
+    router.replace("/signin");
+  }, [resetSync, router]);
+
+  const options: ListItemProps[] = [
+    {
+      title: "Background Tracking",
+      description: backgroundTracking ? "Active" : "Inactive",
+      accessoryRight: () => (
+        <Toggle checked={backgroundTracking} onChange={handleToggleTracking} />
+      ),
+    },
+    {
+      title: "Last Sync",
+      description: lastSyncedAt.toLocaleString(),
+      accessoryRight: () => (
+        <View style={styles.buttonPair}>
+          <Button size="tiny" onPress={handleResync}>
+            RESYNC
+          </Button>
+          <Button size="tiny" status="danger" onPress={resetSync}>
+            RESET
+          </Button>
+        </View>
+      ),
+    },
+    {
+      title: "Disk Usage",
+      description: query.isLoading
+        ? "..."
+        : !query.result.success
+          ? "Unknown"
+          : `${query.result.size} bytes`,
+      accessoryRight: () => (
+        <Button
+          size="tiny"
+          status="danger"
+          onPress={() =>
+            Alert.alert(
+              "Purge Data",
+              "All local data will be deleted and you will be signed out.",
+              [
+                { text: "Cancel", onPress: () => {} },
+                {
+                  text: "OK",
+                  onPress: handlePurgeData,
+                  isPreferred: true,
+                },
+              ],
+            )
+          }
+        >
+          PURGE
+        </Button>
+      ),
+    },
+    {
+      title: "Server Status",
+      description: toTitleCase(serverHealth),
+      accessoryRight: (props) =>
+        serverHealth === "healthy" ? (
+          <CheckmarkIcon {...props} />
+        ) : (
+          <CloseIcon {...props} />
+        ),
+    },
+  ];
+
+  const renderBackAction = () => (
+    <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
+  );
+
+  const renderListItem = ({ item }: { item: ListItemProps }) => (
+    <ListItem
+      title={item.title}
+      description={item.description}
+      accessoryRight={item.accessoryRight}
+    />
+  );
+
+  return (
+    <SafeAreaView
+      edges={["top"]}
+      style={[
+        styles.safeArea,
+        { backgroundColor: theme["background-basic-color-1"] },
+      ]}
+    >
+      <TopNavigation
+        title="Settings"
+        alignment="center"
+        accessoryLeft={renderBackAction}
+      />
+      <Divider />
+      <Layout style={styles.layout}>
+        <List data={options} renderItem={renderListItem} />
+      </Layout>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  layout: {
+    flex: 1,
+  },
+  buttonPair: {
+    flexDirection: "row",
+    gap: 4,
+  },
+});

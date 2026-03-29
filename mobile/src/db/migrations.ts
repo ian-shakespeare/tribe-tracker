@@ -1,6 +1,8 @@
 import type { SQLiteDatabase } from "expo-sqlite";
 import InitialSchema from "./migrations/0001_initial_schema";
 import RemoveInvitations from "./migrations/0002_remove_invitations";
+import FlattenLocations from "./migrations/0003_flatten_locations";
+import RemoveFamilyMemberId from "./migrations/0004_remove_family_member_id";
 
 export interface Migration {
   name: string;
@@ -8,7 +10,12 @@ export interface Migration {
 }
 
 // Registry of all migrations in order
-const migrations = [InitialSchema, RemoveInvitations];
+const migrations = [
+  InitialSchema,
+  RemoveInvitations,
+  FlattenLocations,
+  RemoveFamilyMemberId,
+];
 
 export function getMigrations(): Migration[] {
   return migrations;

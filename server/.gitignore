@@ -1,12 +1,27 @@
-# Binary
+# binaries
 bin/
-tmp/
 
-# Data
-pb_data/
-
-# Test instance logs
-testdata/auxilary.db
-
-# Environment variables
+# environment variables
 *.env
+
+# os and editor files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# docker storage
+.docker-storage/
+
+# temporary files
+tmp/
+.data/
+
+# database files
+*.db
+
+# test coverage files
+coverage.*
+
+# generated files
+internal/database/

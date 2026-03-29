@@ -50,6 +50,12 @@ jobs:
       with:
         go-version: 1.25.x
 
+    - name: Install sqlc
+      run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
+    - name: Generate database code
+      run: ./scripts/generate.sh
+
     - name: Setup Gocyclo
       run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 
@@ -60,3 +66,36 @@ jobs:
 
     - name: Check cyclomatic complexity
       run: gocyclo -over 15 .
+
+  server-generate-docs:
+    name: Generate OpenAPI Docs
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: server
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Setup Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: 1.25.x
+
+    - name: Install swag
+      run: go install github.com/swaggo/swag/cmd/swag@v1.16.6
+
+    - name: Generate docs
+      run: make docs
+
+    - name: Commit and push if changed
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add docs/
+        git diff --cached --quiet && exit 0
+        git commit -m "docs: auto-generate OpenAPI spec [skip ci]"
+        git push
