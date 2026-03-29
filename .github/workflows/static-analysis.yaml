@@ -50,6 +50,12 @@ jobs:
       with:
         go-version: 1.25.x
 
+    - name: Install sqlc
+      run: go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+
+    - name: Generate database code
+      run: ./scripts/generate.sh
+
     - name: Setup Gocyclo
       run: go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
 
