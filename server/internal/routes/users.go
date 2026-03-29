@@ -16,11 +16,11 @@ import (
 //	@Description	Get the calling user.
 //	@Tags			User
 //	@Produce		json
-//	@Success		200		{object}	models.User			"Calling user"
-//	@Failure		400		{string}	string				"Bad request"
-//	@Failure		401		{string}	string				"Unauthorized"
-//	@Failure		401		{string}	string				"Not found"
-//	@Failure		500		{string}	string				"Server error"
+//	@Success		200	{object}	models.User	"Calling user"
+//	@Failure		400	{string}	string		"Bad request"
+//	@Failure		401	{string}	string		"Unauthorized"
+//	@Failure		401	{string}	string		"Not found"
+//	@Failure		500	{string}	string		"Server error"
 //	@Router			/api/users/me [get]
 func getMe(c fiber.Ctx) error {
 	dbSrv, ok := fiber.GetService[*services.DB](c.App().State(), services.DBName)

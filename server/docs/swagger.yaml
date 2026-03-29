@@ -32,6 +32,11 @@ definitions:
       user:
         type: string
     type: object
+  models.Health:
+    properties:
+      status:
+        type: string
+    type: object
   models.Location:
     properties:
       createdAt:
@@ -61,6 +66,13 @@ definitions:
       name:
         type: string
     type: object
+  models.NewLocation:
+    properties:
+      lat:
+        type: number
+      lon:
+        type: number
+    type: object
   models.NewUser:
     properties:
       email:
@@ -70,6 +82,13 @@ definitions:
       lastName:
         type: string
       password:
+        type: string
+      passwordConfirm:
+        type: string
+    type: object
+  models.Refresh:
+    properties:
+      refreshToken:
         type: string
     type: object
   models.SignIn:
@@ -100,6 +119,8 @@ definitions:
     type: object
   models.UpdateUser:
     properties:
+      avatar:
+        type: string
       firstName:
         type: string
       lastName:
@@ -136,12 +157,12 @@ paths:
       - application/json
       description: Refresh an existing token.
       parameters:
-      - description: User details
+      - description: Refresh token
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.SignIn'
+          $ref: '#/definitions/models.Refresh'
       produces:
       - application/json
       responses:
@@ -266,7 +287,78 @@ paths:
       summary: Create family
       tags:
       - Family
+  /api/families/{familyId}:
+    get:
+      description: Get family details.
+      parameters:
+      - description: Family ID
+        in: path
+        name: familyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Family details
+          schema:
+            $ref: '#/definitions/models.Family'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Family not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get family
+      tags:
+      - Family
   /api/families/{familyId}/members:
+    get:
+      description: Get all members of a family.
+      parameters:
+      - description: Family ID
+        in: path
+        name: familyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Family members
+          schema:
+            items:
+              $ref: '#/definitions/models.FamilyMember'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Family not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get family members
+      tags:
+      - Family
     post:
       description: Join a family.
       parameters:
@@ -301,6 +393,64 @@ paths:
       summary: Create family member
       tags:
       - Family
+  /api/families/{familyId}/members/locations:
+    get:
+      description: Get all member locations for a family.
+      parameters:
+      - description: Family ID
+        in: path
+        name: familyId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Family member locations
+          schema:
+            items:
+              $ref: '#/definitions/models.Location'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Family not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get family member locations
+      tags:
+      - Family
+  /api/health:
+    get:
+      description: Get service health state.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Service health
+          schema:
+            $ref: '#/definitions/models.Health'
+        "404":
+          description: Router failed
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get service health
+      tags:
+      - Meta
   /api/locations:
     post:
       consumes:
@@ -312,14 +462,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.NewFamily'
+          $ref: '#/definitions/models.NewLocation'
       produces:
       - application/json
       responses:
         "201":
           description: Newly created family
           schema:
-            $ref: '#/definitions/models.Family'
+            $ref: '#/definitions/models.Location'
         "400":
           description: Bad request
           schema:
@@ -431,6 +581,30 @@ paths:
       tags:
       - Sync
   /api/users/me:
+    get:
+      description: Get the calling user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Calling user
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad request
+          schema:
+            type: string
+        "401":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Server error
+          schema:
+            type: string
+      summary: Get me
+      tags:
+      - User
     patch:
       consumes:
       - application/json

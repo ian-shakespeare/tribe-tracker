@@ -12,8 +12,8 @@ import (
 //	@Tags			Meta
 //	@Produce		text/plain
 //	@Success		200	{object}	models.Health	"Service health"
-//	@Failure		404	{string}	string	"Router failed"
-//	@Failure		500	{string}	string	"Server error"
+//	@Failure		404	{string}	string			"Router failed"
+//	@Failure		500	{string}	string			"Server error"
 //	@Router			/api/health [get]
 func getHealth(c fiber.Ctx) error {
 	var h models.Health

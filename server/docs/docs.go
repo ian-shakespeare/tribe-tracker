@@ -30,12 +30,12 @@ const docTemplate = `{
                 "summary": "RefreshToken",
                 "parameters": [
                     {
-                        "description": "User details",
+                        "description": "Refresh token",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.SignIn"
+                            "$ref": "#/definitions/models.Refresh"
                         }
                     }
                 ],
@@ -223,7 +223,114 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/families/{familyId}": {
+            "get": {
+                "description": "Get family details.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Family"
+                ],
+                "summary": "Get family",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Family ID",
+                        "name": "familyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Family details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Family"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Family not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/families/{familyId}/members": {
+            "get": {
+                "description": "Get all members of a family.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Family"
+                ],
+                "summary": "Get family members",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Family ID",
+                        "name": "familyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Family members",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.FamilyMember"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Family not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Join a family.",
                 "produces": [
@@ -276,6 +383,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/families/{familyId}/members/locations": {
+            "get": {
+                "description": "Get all member locations for a family.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Family"
+                ],
+                "summary": "Get family member locations",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Family ID",
+                        "name": "familyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Family member locations",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Location"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Family not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "description": "Get service health state.",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Meta"
+                ],
+                "summary": "Get service health",
+                "responses": {
+                    "200": {
+                        "description": "Service health",
+                        "schema": {
+                            "$ref": "#/definitions/models.Health"
+                        }
+                    },
+                    "404": {
+                        "description": "Router failed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/locations": {
             "post": {
                 "description": "Create a new location.",
@@ -296,7 +491,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.NewFamily"
+                            "$ref": "#/definitions/models.NewLocation"
                         }
                     }
                 ],
@@ -304,7 +499,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Newly created family",
                         "schema": {
-                            "$ref": "#/definitions/models.Family"
+                            "$ref": "#/definitions/models.Location"
                         }
                     },
                     "400": {
@@ -473,6 +668,42 @@ const docTemplate = `{
             }
         },
         "/api/users/me": {
+            "get": {
+                "description": "Get the calling user.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Get me",
+                "responses": {
+                    "200": {
+                        "description": "Calling user",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "patch": {
                 "description": "Update the calling user.",
                 "consumes": [
@@ -583,6 +814,14 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Health": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Location": {
             "type": "object",
             "properties": {
@@ -628,6 +867,17 @@ const docTemplate = `{
                 }
             }
         },
+        "models.NewLocation": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "number"
+                },
+                "lon": {
+                    "type": "number"
+                }
+            }
+        },
         "models.NewUser": {
             "type": "object",
             "properties": {
@@ -641,6 +891,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "passwordConfirm": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Refresh": {
+            "type": "object",
+            "properties": {
+                "refreshToken": {
                     "type": "string"
                 }
             }
@@ -688,6 +949,9 @@ const docTemplate = `{
         "models.UpdateUser": {
             "type": "object",
             "properties": {
+                "avatar": {
+                    "type": "string"
+                },
                 "firstName": {
                     "type": "string"
                 },

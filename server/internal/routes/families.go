@@ -55,12 +55,12 @@ func createFamily(c fiber.Ctx) error {
 //	@Description	Get family details.
 //	@Tags			Family
 //	@Produce		json
-//	@Param			familyId	path		string				true	"Family ID"
+//	@Param			familyId	path		string			true	"Family ID"
 //	@Success		200			{object}	models.Family	"Family details"
-//	@Failure		400			{string}	string				"Bad request"
-//	@Failure		401			{string}	string				"Unauthorized"
-//	@Failure		404			{string}	string				"Family not found"
-//	@Failure		500			{string}	string				"Server error"
+//	@Failure		400			{string}	string			"Bad request"
+//	@Failure		401			{string}	string			"Unauthorized"
+//	@Failure		404			{string}	string			"Family not found"
+//	@Failure		500			{string}	string			"Server error"
 //	@Router			/api/families/{familyId} [get]
 func getFamily(c fiber.Ctx) error {
 	dbSrv, ok := fiber.GetService[*services.DB](c.App().State(), services.DBName)
@@ -131,12 +131,12 @@ func createFamilyMember(c fiber.Ctx) error {
 //	@Description	Get all members of a family.
 //	@Tags			Family
 //	@Produce		json
-//	@Param			familyId	path		string				true	"Family ID"
+//	@Param			familyId	path		string					true	"Family ID"
 //	@Success		200			{object}	[]models.FamilyMember	"Family members"
-//	@Failure		400			{string}	string				"Bad request"
-//	@Failure		401			{string}	string				"Unauthorized"
-//	@Failure		404			{string}	string				"Family not found"
-//	@Failure		500			{string}	string				"Server error"
+//	@Failure		400			{string}	string					"Bad request"
+//	@Failure		401			{string}	string					"Unauthorized"
+//	@Failure		404			{string}	string					"Family not found"
+//	@Failure		500			{string}	string					"Server error"
 //	@Router			/api/families/{familyId}/members [get]
 func getFamilyMembers(c fiber.Ctx) error {
 	dbSrv, ok := fiber.GetService[*services.DB](c.App().State(), services.DBName)
@@ -170,7 +170,7 @@ func getFamilyMembers(c fiber.Ctx) error {
 //	@Tags			Family
 //	@Produce		json
 //	@Param			familyId	path		string				true	"Family ID"
-//	@Success		200			{object}	[]models.Locations	"Family member locations"
+//	@Success		200			{object}	[]models.Location	"Family member locations"
 //	@Failure		400			{string}	string				"Bad request"
 //	@Failure		401			{string}	string				"Unauthorized"
 //	@Failure		404			{string}	string				"Family not found"
