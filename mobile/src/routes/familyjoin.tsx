@@ -16,17 +16,22 @@ import { useRouter } from "expo-router";
 import { useToast } from "../views/contexts/Toast";
 import api from "../services/api";
 import { useSync } from "../views/contexts/Sync";
+import QRScanner from "../views/components/QRScanner";
 
 export default function FamilyJoinScreen() {
   const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
   const { resetSync, sync } = useSync();
-  const [familyId, setFamilyId] = useState("");
+  const [familyCode, setFamilyCode] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (familyId: string) => {
+    setIsSubmitting(true);
+
     const joinRes = await api.joinFamily(familyId);
     if (!joinRes.ok) {
+      setIsSubmitting(false);
       toast.danger("Failed to join family: " + joinRes.error.message);
       return;
     }
@@ -34,6 +39,7 @@ export default function FamilyJoinScreen() {
     await resetSync();
     await sync();
 
+    setIsSubmitting(false);
     router.replace({
       pathname: "/familydetail",
       params: { familyId: joinRes.familyMember.family },
@@ -61,19 +67,33 @@ export default function FamilyJoinScreen() {
       />
       <Divider />
       <Layout style={styles.layout}>
+        <QRScanner
+          onScan={(code) => {
+            setFamilyCode(code);
+            handleSubmit(code.trim());
+          }}
+        />
+        <Text category="s1" appearance="hint" style={styles.text}>
+          - or -
+        </Text>
         <View style={styles.container}>
           <View style={styles.input}>
             <Input
-              placeholder="Code"
-              value={familyId}
-              onChangeText={setFamilyId}
+              placeholder="Enter Code"
+              value={familyCode}
+              onChangeText={setFamilyCode}
             />
             <Text category="p2" appearance="hint" style={styles.text}>
-              A series of random digits in the format
-              00000000-0000-0000-0000-000000000000.
+              A series of random characters in the format
+              &quot;00000000-0000-0000-0000-000000000000&quot;
             </Text>
           </View>
-          <Button onPress={handleSubmit}>Create</Button>
+          <Button
+            onPress={() => handleSubmit(familyCode.trim())}
+            disabled={isSubmitting}
+          >
+            {!isSubmitting ? "Join" : "Joining..."}
+          </Button>
         </View>
       </Layout>
     </SafeAreaView>
@@ -88,6 +108,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    gap: 12,
   },
   container: {
     flex: 1,

@@ -75,5 +75,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-sqlite",
     "expo-task-manager",
     ["expo-router", { root: "src/routes" }],
+    [
+      "expo-camera",
+      {
+        cameraPermission: "Allow $(PRODUCT_NAME) to access your camera.",
+        barcodeScannerEnabled: true,
+      },
+    ],
   ],
 });
