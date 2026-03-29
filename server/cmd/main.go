@@ -78,7 +78,7 @@ func checkDirPermission(path string) error {
 func main() {
 	_ = godotenv.Load()
 
-	baseDir := env.Fallback("BASE_DIR", "/var/lib/go-app-template")
+	baseDir := env.Fallback("BASE_DIR", "/var/lib/tribetracker")
 
 	if err := setupDirectories(baseDir); err != nil {
 		log.Fatal(err)
@@ -95,18 +95,24 @@ func main() {
 
 	storageSrv := services.NewStorage(filepath.Join(baseDir, storageDir))
 
+	signingKey, err := env.GetOrSecret("SIGNING_KEY")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var cfg fiber.Config
 	cfg.Services = append(cfg.Services, dbSrv)
 	cfg.Services = append(cfg.Services, storageSrv)
 
 	app := fiber.New(cfg)
-	app.State().Set("signingKey", []byte(env.Must(env.Get("SIGNING_KEY"))))
+	app.State().Set("signingKey", []byte(signingKey))
 	app.State().Set("accessExpiry", time.Hour)
 	app.State().Set("refreshExpiry", 60*24*time.Hour)
 
 	routes.Register(app)
 
-	addr := ":8000"
+	port := env.Fallback("PORT", "8000")
+	addr := fmt.Sprintf(":%s", port)
 	if err := app.Listen(addr); err != nil {
 		log.Fatal(err)
 	}

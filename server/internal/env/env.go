@@ -10,8 +10,10 @@ import (
 )
 
 var (
-	ErrInvalidEnvFile  = errors.New("invalid env file")
-	ErrMissingVariable = errors.New("missing environment variable")
+	ErrInvalidEnvFile      = errors.New("invalid env file")
+	ErrMissingVariable     = errors.New("missing environment variable")
+	ErrMissingEnvAndSecret = errors.New("missing environment variable and secret file")
+	ErrMissingSecretFile   = errors.New("secret file does not exist")
 )
 
 func Fallback(name, fallback string) string {
@@ -53,6 +55,25 @@ func Load(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func GetOrSecret(name string) (string, error) {
+	value, err := Get(name)
+	if err == nil {
+		return value, nil
+	}
+
+	file, err := Get(name + "_FILE")
+	if err != nil {
+		return "", ErrMissingEnvAndSecret
+	}
+
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return "", ErrMissingSecretFile
+	}
+
+	return string(b), nil
 }
 
 func Must(value string, err error) string {

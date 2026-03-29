@@ -1,7 +1,11 @@
 .github/
 mobile/
 display/
-server/pb_data/
+server/.data/
+server/bin/
+server/docs/
+server/testdata/
+server/tmp/
 server/Makefile
 
 .idea/
