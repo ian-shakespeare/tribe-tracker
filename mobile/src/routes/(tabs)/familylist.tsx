@@ -1,14 +1,17 @@
 import {
+  Button,
+  Card,
   Divider,
   Layout,
   List,
   ListItem,
+  Modal,
   Text,
   TopNavigation,
   TopNavigationAction,
   useTheme,
 } from "@ui-kitten/components";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import PlusIcon from "../../views/components/PlusIcon";
 import { useRouter } from "expo-router";
@@ -27,6 +30,7 @@ export default function FamilyListScreen() {
   const router = useRouter();
   const theme = useTheme();
   const query = useLiveQuery(getAllFamilies);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   const renderListItem = ({ item }: ListItemProps) => (
     <ListItem
@@ -46,10 +50,10 @@ export default function FamilyListScreen() {
     () => (
       <TopNavigationAction
         icon={PlusIcon}
-        onPress={() => router.push("/familynew")}
+        onPress={() => setIsModalVisible(true)}
       />
     ),
-    [router],
+    [setIsModalVisible],
   );
 
   return (
@@ -66,6 +70,49 @@ export default function FamilyListScreen() {
         accessoryRight={renderMenuActions}
       />
       <Divider />
+      <Modal
+        visible={isModalVisible}
+        onBackdropPress={() => setIsModalVisible(false)}
+        backdropStyle={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}
+      >
+        <Card>
+          <View
+            style={{
+              justifyContent: "center",
+              paddingVertical: 8,
+              gap: 8,
+            }}
+          >
+            <Button
+              onPress={() => {
+                setIsModalVisible(false);
+                router.push("/familyjoin");
+              }}
+              size="giant"
+            >
+              Join Existing Family
+            </Button>
+            <Text
+              category="s1"
+              appearance="hint"
+              style={{ textAlign: "center", paddingBottom: 2 }}
+            >
+              - or -
+            </Text>
+            <Button
+              appearance="outline"
+              onPress={() => {
+                setIsModalVisible(false);
+                router.push("/familynew");
+              }}
+              size="giant"
+              status="basic"
+            >
+              Create A New One
+            </Button>
+          </View>
+        </Card>
+      </Modal>
       <Layout style={styles.layout}>
         {query.isLoading ? (
           <Text>Loading</Text>
@@ -117,5 +164,8 @@ const styles = StyleSheet.create({
   },
   highlight: {
     textDecorationLine: "underline",
+  },
+  modalDivider: {
+    marginVertical: 6,
   },
 });

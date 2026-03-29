@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import * as SecureStore from "expo-secure-store";
-import * as API from "../../controllers/api";
+import api, { ApiFamily, ApiUser } from "../../services/api";
 import * as Location from "expo-location";
 import { deleteUsers, upsertUsers } from "../../models/user";
 import { deleteFamilies, upsertFamilies } from "../../models/family";
@@ -33,9 +33,9 @@ type SyncProviderProps = {
   children: ReactNode;
 };
 
-async function upsertAndDeleteRecentUsers(users: API.ApiUser[]) {
+async function upsertAndDeleteRecentUsers(users: ApiUser[]) {
   const { updatedUsers, deletedUserIDs } = users.reduce<{
-    updatedUsers: API.ApiUser[];
+    updatedUsers: ApiUser[];
     deletedUserIDs: string[];
   }>(
     ({ updatedUsers, deletedUserIDs }, curr) =>
@@ -55,9 +55,9 @@ async function upsertAndDeleteRecentUsers(users: API.ApiUser[]) {
   );
 }
 
-async function upsertAndDeleteFamilies(families: API.ApiFamily[]) {
+async function upsertAndDeleteFamilies(families: ApiFamily[]) {
   const { updatedFamilies, deletedFamilyIDs } = families.reduce<{
-    updatedFamilies: API.ApiFamily[];
+    updatedFamilies: ApiFamily[];
     deletedFamilyIDs: string[];
   }>(
     ({ updatedFamilies, deletedFamilyIDs }, curr) =>
@@ -101,7 +101,7 @@ async function getLocation(): Promise<Location.LocationObjectCoords | null> {
 }
 
 async function syncWithAPI(lastSyncedAt: Date) {
-  if (!API.isSignedIn()) {
+  if (!api.isAuthenticated) {
     throw new Error("Not authenticated.");
   }
 
@@ -110,11 +110,16 @@ async function syncWithAPI(lastSyncedAt: Date) {
   // fresh location data when the user actively opens the app.
   const coords = await getLocation();
   if (coords) {
-    await API.createLocation(coords.latitude, coords.longitude).catch(() => {});
+    const res = await api.createLocation(coords.latitude, coords.longitude);
+    if (!res.ok) {
+    }
   }
 
-  const { users, families, familyMembers, locations } =
-    await API.getSyncData(lastSyncedAt);
+  const res = await api.getSyncData(lastSyncedAt);
+  if (!res.ok) {
+    return;
+  }
+  const { users, families, familyMembers, locations } = res.data;
 
   await upsertAndDeleteRecentUsers(users);
   await upsertAndDeleteFamilies(families);

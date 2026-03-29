@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   Button,
   Divider,
+  IconProps,
   Layout,
   List,
   ListItem,
@@ -22,18 +23,21 @@ import { deleteAllFamilyMembers } from "../models/familyMember";
 import { deleteAllFamilies } from "../models/family";
 import { deleteAllUsers } from "../models/user";
 import * as SecureStore from "expo-secure-store";
-import { signOut } from "../controllers/api";
+import api from "../services/api";
 import { useToast } from "../views/contexts/Toast";
 import {
   isTrackingActive,
   startBackgroundTracking,
   stopBackgroundTracking,
 } from "../services/backgroundLocation";
+import CheckmarkIcon from "../views/components/CheckmarkIcon";
+import { toTitleCase } from "../utils/strings";
+import CloseIcon from "../views/components/CloseIcon";
 
 type ListItemProps = {
   title: string;
   description: string;
-  accessoryRight?: () => ReactElement;
+  accessoryRight?: (props?: IconProps) => ReactElement;
 };
 
 export default function SettingsScreen() {
@@ -43,9 +47,15 @@ export default function SettingsScreen() {
   const { lastSyncedAt, sync, resetSync } = useSync();
   const query = useLiveQuery(getDatabaseSize);
   const [backgroundTracking, setBackgroundTracking] = useState(false);
+  const [serverHealth, setServerHealth] = useState<
+    "loading" | "healthy" | "unhealthy"
+  >("loading");
 
   useEffect(() => {
     isTrackingActive().then(setBackgroundTracking);
+    api
+      .healthy()
+      .then(({ ok }) => setServerHealth(ok ? "healthy" : "unhealthy"));
   }, []);
 
   const handleToggleTracking = async (enabled: boolean) => {
@@ -84,11 +94,12 @@ export default function SettingsScreen() {
     await deleteAllFamilyMembers();
     await deleteAllFamilies();
     await deleteAllUsers();
+    await resetSync();
 
-    signOut();
+    api.signOut();
     await SecureStore.deleteItemAsync("MY_USER_ID");
     router.replace("/signin");
-  }, [router]);
+  }, [resetSync, router]);
 
   const options: ListItemProps[] = [
     {
@@ -141,6 +152,16 @@ export default function SettingsScreen() {
           PURGE
         </Button>
       ),
+    },
+    {
+      title: "Server Status",
+      description: toTitleCase(serverHealth),
+      accessoryRight: (props) =>
+        serverHealth === "healthy" ? (
+          <CheckmarkIcon {...props} />
+        ) : (
+          <CloseIcon {...props} />
+        ),
     },
   ];
 

@@ -20,8 +20,12 @@ type Toast = {
 
 const ToastContext = createContext<{
   danger: (message: string) => void;
+  info: (message: string) => void;
 }>({
   danger: () => {
+    throw new Error("Uninitialized.");
+  },
+  info: () => {
     throw new Error("Uninitialized.");
   },
 });
@@ -40,6 +44,10 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
     setToast({ mode: "danger", message });
   };
 
+  const info = (message: string) => {
+    setToast({ mode: "info", message });
+  };
+
   useEffect(() => {
     if (!toast) return;
 
@@ -51,7 +59,7 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
   }, [toast]);
 
   return (
-    <ToastContext.Provider value={{ danger }}>
+    <ToastContext.Provider value={{ danger, info }}>
       {!!toast && (
         <Card
           onPress={() => setToast(null)}

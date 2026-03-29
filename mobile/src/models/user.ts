@@ -151,14 +151,16 @@ export async function getUser(id: string): Promise<User | null> {
   };
 }
 
-type UserLocation = Pick<User, "firstName" | "lastName"> &
-  Pick<Location, "coordinates"> & { recordedAt: Date };
+export type UserLocation = Pick<User, "firstName" | "lastName" | "avatar"> &
+  Pick<Location, "id" | "lat" | "lon"> & { recordedAt: Date };
 
 export async function getUserLocations(): Promise<UserLocation[]> {
   const query = `
   WITH latest_locations AS (
-    SELECT user,
-      coordinates,
+    SELECT id,
+      user,
+      lat,
+      lon,
       createdAt
     FROM locations
     GROUP BY user
@@ -166,7 +168,10 @@ export async function getUserLocations(): Promise<UserLocation[]> {
   )
   SELECT u.firstName,
     u.lastName,
-    ll.coordinates,
+    u.avatar,
+    ll.id,
+    ll.lat,
+    ll.lon,
     ll.createdAt AS recordedAt
   FROM latest_locations ll
   JOIN users u
@@ -177,13 +182,15 @@ export async function getUserLocations(): Promise<UserLocation[]> {
   const records = await DB.getAllAsync<{
     firstName: string;
     lastName: string;
-    coordinates: string;
+    avatar?: string;
+    id: string;
+    lat: number;
+    lon: number;
     recordedAt: string;
   }>(query);
 
   return records.map((record) => ({
     ...record,
-    coordinates: JSON.parse(JSON.parse(record.coordinates)),
     recordedAt: new Date(record.recordedAt),
   }));
 }

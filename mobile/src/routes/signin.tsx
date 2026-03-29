@@ -2,13 +2,7 @@ import { Button, Input, Layout, Text, useTheme } from "@ui-kitten/components";
 import { useState } from "react";
 import { View } from "react-native";
 import SecureInput from "../views/components/SecureInput";
-import {
-  ApiUser,
-  getBaseUrl,
-  saveBaseUrl,
-  signIn,
-  registerUser,
-} from "../controllers/api";
+import api from "../services/api";
 import { useRouter } from "expo-router";
 import { useToast } from "../views/contexts/Toast";
 import { upsertUser } from "../models/user";
@@ -24,55 +18,55 @@ export default function SignInScreen() {
   const [authMode, setAuthMode] = useState<"sign-in" | "register">("sign-in");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [apiUrl, setApiUrl] = useState(getBaseUrl());
+  const [apiUrl, setApiUrl] = useState(api.baseUrl?.href ?? "");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = async () => {
     try {
-      if (getBaseUrl() !== apiUrl) {
+      if (api.baseUrl?.href !== apiUrl) {
         const url = new URL(apiUrl);
-        saveBaseUrl(url);
+        api.baseUrl = url;
       }
 
-      let apiUser: ApiUser;
       if (authMode === "register") {
-        const data = {
-          email: email.trim().toLowerCase(),
-          firstName: firstName.trim().toLowerCase(),
-          lastName: lastName.trim().toLowerCase(),
-          password: password.trim(),
-          passwordConfirm: confirmPassword.trim(),
-        };
-        const res = await registerUser(data);
-        if (!res.success) {
+        const res = await api.registerUser(
+          email.trim().toLowerCase(),
+          firstName.trim().toLowerCase(),
+          lastName.trim().toLowerCase(),
+          password.trim(),
+          confirmPassword.trim(),
+        );
+        if (!res.ok) {
           toast.danger(res.error.message);
           return;
         }
-
-        apiUser = res.user;
       } else {
-        const res = await signIn(email.trim().toLowerCase(), password);
-        if (!res.success) {
+        const res = await api.signIn(email.trim().toLowerCase(), password);
+        if (!res.ok) {
           toast.danger(res.error.message);
           return;
         }
+      }
 
-        apiUser = res.user;
+      const res = await api.getMe();
+      if (!res.ok) {
+        toast.danger(res.error.message);
+        return;
       }
 
       const created = await upsertUser({
-        ...apiUser,
-        createdAt: new Date(apiUser.createdAt),
-        updatedAt: new Date(apiUser.updatedAt),
+        ...res.user,
+        createdAt: new Date(res.user.createdAt),
+        updatedAt: new Date(res.user.updatedAt),
       });
 
       if (!created.success) {
         throw created.error;
       }
 
-      await SecureStore.setItemAsync("MY_USER_ID", apiUser.id).then(sync);
+      await SecureStore.setItemAsync("MY_USER_ID", res.user.id).then(sync);
 
       router.replace("/(tabs)/map");
     } catch (e) {

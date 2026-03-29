@@ -19,6 +19,7 @@ import {
   getFamilyMembers,
 } from "../models/family";
 import { formatDate, toTitleCase } from "../utils/strings";
+import PersonAddIcon from "../views/components/PersonAddIcon";
 
 type ListItemProps = {
   item: FamilyMemberUser;
@@ -51,6 +52,15 @@ export default function FamilyDetailScreen() {
     <TopNavigationAction icon={BackArrowIcon} onPress={() => router.back()} />
   );
 
+  const renderInviteAction = () => (
+    <TopNavigationAction
+      icon={PersonAddIcon}
+      onPress={() =>
+        router.push({ pathname: "/familyinvite", params: { familyId } })
+      }
+    />
+  );
+
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
       <Text category="p1" appearance="hint" style={styles.emptyText}>
@@ -75,6 +85,7 @@ export default function FamilyDetailScreen() {
         }
         alignment="center"
         accessoryLeft={renderBackAction}
+        accessoryRight={renderInviteAction}
       />
       <Divider />
       <Layout style={styles.layout}>

@@ -16,7 +16,7 @@ import PencilIcon from "../../views/components/PencilIcon";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getUser } from "../../models/user";
 import * as SecureStore from "expo-secure-store";
-import { signOut } from "../../controllers/api";
+import api from "../../services/api";
 import { formatDate } from "../../utils/strings";
 import GearIcon from "../../views/components/GearIcon";
 
@@ -38,7 +38,7 @@ export default function ProfileScreen() {
   });
 
   const handleSignOut = () => {
-    signOut();
+    api.signOut();
     SecureStore.deleteItemAsync("MY_USER_ID").then(() =>
       router.replace("/signin"),
     );

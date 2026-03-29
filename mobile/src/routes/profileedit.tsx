@@ -22,7 +22,7 @@ import { Image } from "expo-image";
 import { getUser, updateUser } from "../models/user";
 import { useLiveQuery } from "../db/liveQuery";
 import * as SecureStore from "expo-secure-store";
-import * as API from "../controllers/api";
+import api from "../services/api";
 import { toTitleCase } from "../utils/strings";
 
 const AVATAR_SIZE = 200;
@@ -55,6 +55,7 @@ export default function ProfileEditScreen() {
 
   const handlePickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
       mediaTypes: ["images"],
       aspect: [1, 1],
       quality: 1,
@@ -69,33 +70,46 @@ export default function ProfileEditScreen() {
   };
 
   const handleSubmit = async () => {
-    try {
-      if (query.isLoading) {
-        throw new Error("User has not loaded.");
-      }
-
-      const myUserId = await SecureStore.getItemAsync("MY_USER_ID");
-      if (!myUserId) {
-        throw new Error("Failed to find my user ID.");
-      }
-
-      const updated = await API.updateMe({
-        firstName: firstName.trim().toLowerCase(),
-        lastName: lastName.trim().toLowerCase(),
-        avatar: avatar === query.result?.avatar ? undefined : avatar,
-      });
-
-      const { success } = await updateUser(myUserId, updated);
-      if (!success) {
-        throw new Error("Failed to update local user. Please re-sync.");
-      }
-
-      router.back();
-    } catch (e) {
-      if (e instanceof Error) {
-        toast.danger(e.message);
-      }
+    if (query.isLoading) {
+      toast.danger("User not yet loading. Try again in a few seconds.");
+      return;
     }
+
+    const myUserId = await SecureStore.getItemAsync("MY_USER_ID");
+    if (!myUserId) {
+      toast.danger("Failed to get user ID.");
+      return;
+    }
+
+    let avatarUri = undefined;
+    if (avatar) {
+      const uploadRes = await api.uploadMedia(avatar);
+      if (!uploadRes.ok) {
+        toast.danger("Failed to upload image: " + uploadRes.error.message);
+        return;
+      }
+
+      avatarUri = uploadRes.url;
+    }
+
+    const res = await api.updateMe({
+      firstName: firstName.trim().toLowerCase(),
+      lastName: lastName.trim().toLowerCase(),
+      avatar: avatarUri,
+    });
+
+    if (!res.ok) {
+      toast.danger(res.error.message);
+      return;
+    }
+
+    const { success } = await updateUser(myUserId, res.user);
+    if (!success) {
+      toast.danger("Failed to update local user. Please re-sync.");
+      return;
+    }
+
+    router.back();
   };
 
   const renderBackAction = () => (

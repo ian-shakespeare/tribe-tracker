@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import * as SplashScreen from "expo-splash-screen";
-import { isSignedIn, refreshAuth } from "../controllers/api";
+import api from "../services/api";
 
 export default function Index() {
   const [destination, setDestination] = useState<
@@ -9,14 +9,11 @@ export default function Index() {
   >(null);
 
   useEffect(() => {
-    if (isSignedIn()) {
+    if (api.isAuthenticated) {
       setDestination("/(tabs)/map");
-      return;
+    } else {
+      setDestination("/signin");
     }
-
-    refreshAuth()
-      .then(() => setDestination("/(tabs)/map"))
-      .catch(() => setDestination("/signin"));
   }, []);
 
   useEffect(() => {

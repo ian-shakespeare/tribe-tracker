@@ -2,36 +2,71 @@ import PlatformMap from "../../views/components/PlatformMap";
 import { useLiveQuery } from "../../db/liveQuery";
 import { getUserLocations } from "../../models/user";
 import { toTitleCase } from "../../utils/strings";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import UserHighlight from "../../views/components/UserHighlight";
 
 export default function MapScreen() {
+  const { top } = useSafeAreaInsets();
   const query = useLiveQuery(getUserLocations);
-
-  // TODO: post user location somewhere
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(
+    null,
+  );
+  const selectedLocation = query.isLoading
+    ? null
+    : (query.result.find(({ id }) => id === selectedLocationId) ?? null);
 
   return (
-    <PlatformMap
-      markers={
-        query.isLoading
-          ? []
-          : query.result.map(({ firstName, lastName, coordinates }) => ({
-              title: toTitleCase(`${firstName} ${lastName}`),
-              coordinates: {
-                latitude: coordinates.lat,
-                longitude: coordinates.lon,
-              },
-            }))
-      }
-      cameraPosition={
-        query.isLoading || query.result.length < 1
-          ? undefined
-          : {
-              coordinates: {
-                latitude: query.result[0].coordinates.lat,
-                longitude: query.result[0].coordinates.lon,
-              },
-              zoom: 7,
-            }
-      }
-    />
+    <>
+      {selectedLocation && (
+        <View
+          style={[
+            styles.highlightContainer,
+            {
+              top,
+            },
+          ]}
+        >
+          <UserHighlight userLocation={selectedLocation} />
+        </View>
+      )}
+      <PlatformMap
+        onMarkerClick={setSelectedLocationId}
+        onMapClick={() => setSelectedLocationId(null)}
+        markers={
+          query.isLoading
+            ? []
+            : query.result.map(({ id, firstName, lastName, lat, lon }) => ({
+                id: id,
+                title: toTitleCase(`${firstName} ${lastName}`),
+                coordinates: {
+                  latitude: lat,
+                  longitude: lon,
+                },
+              }))
+        }
+        cameraPosition={
+          query.isLoading || query.result.length < 1
+            ? undefined
+            : {
+                coordinates: {
+                  latitude: query.result[0].lat,
+                  longitude: query.result[0].lon,
+                },
+                zoom: 7,
+              }
+        }
+      />
+    </>
   );
 }
+
+const styles = StyleSheet.create({
+  highlightContainer: {
+    position: "absolute",
+    width: "100%",
+    zIndex: 1,
+    paddingHorizontal: 12,
+  },
+});

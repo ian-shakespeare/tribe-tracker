@@ -1,7 +1,6 @@
 import DB from "../db";
 
 export type FamilyMember = {
-  id: string;
   user: string;
   family: string;
   createdAt: Date;
@@ -15,15 +14,13 @@ export async function createFamilyMember(
 > {
   const query = `
   INSERT INTO familyMembers (
-    id,
     user,
     family,
     createdAt
   ) VALUES (
-    ?, ?, ?, ?
+    ?, ?, ?
   )
-  RETURNING id,
-    user,
+  RETURNING user,
     family,
     createdAt
   `;
@@ -35,7 +32,6 @@ export async function createFamilyMember(
     createdAt: string;
   }>(
     query,
-    familyMember.id,
     familyMember.user,
     familyMember.family,
     familyMember.createdAt.toISOString(),
@@ -60,21 +56,19 @@ export async function createFamilyMember(
 export async function upsertFamilyMembers(familyMembers: FamilyMember[]) {
   const statement = await DB.prepareAsync(`
   INSERT INTO familyMembers (
-    id,
     user,
     family,
     createdAt
   ) VALUES (
-    $id, $user, $family, $createdAt
+    $user, $family, $createdAt
   )
-  ON CONFLICT (id)
+  ON CONFLICT (user, family)
   DO NOTHING
   `);
 
   await Promise.all(
-    familyMembers.map(({ id, user, family, createdAt }) =>
+    familyMembers.map(({ user, family, createdAt }) =>
       statement.executeAsync({
-        $id: id,
         $user: user,
         $family: family,
         $createdAt: createdAt.toISOString(),

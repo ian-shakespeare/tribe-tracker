@@ -14,53 +14,29 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BackArrowIcon from "../views/components/BackArrowIcon";
 import { useRouter } from "expo-router";
 import { useToast } from "../views/contexts/Toast";
-import { createFamily } from "../models/family";
-import { createFamilyMember } from "../models/familyMember";
 import api from "../services/api";
+import { useSync } from "../views/contexts/Sync";
 
-export default function FamilyNewScreen() {
+export default function FamilyJoinScreen() {
   const router = useRouter();
   const theme = useTheme();
   const toast = useToast();
-  const [name, setName] = useState("");
+  const { resetSync, sync } = useSync();
+  const [familyId, setFamilyId] = useState("");
 
   const handleSubmit = async () => {
-    const familyRes = await api.createFamily(name);
-    if (!familyRes.ok) {
-      toast.danger(familyRes.error.message);
-      return;
-    }
-
-    const joinRes = await api.joinFamily(familyRes.family.id);
+    const joinRes = await api.joinFamily(familyId);
     if (!joinRes.ok) {
       toast.danger("Failed to join family: " + joinRes.error.message);
       return;
     }
 
-    const family = familyRes.family;
-    const familyMember = joinRes.familyMember;
-
-    const created = await createFamily({
-      ...family,
-      createdAt: new Date(family.createdAt),
-      updatedAt: new Date(family.updatedAt),
-    });
-    if (!created.success) {
-      toast.danger(created.error.message);
-      return;
-    }
-
-    const { success } = await createFamilyMember({
-      ...familyMember,
-      createdAt: new Date(familyMember.createdAt),
-    });
-    if (!success) {
-      toast.danger("Failed to create local family member.");
-    }
+    await resetSync();
+    await sync();
 
     router.replace({
       pathname: "/familydetail",
-      params: { familyId: created.family.id },
+      params: { familyId: joinRes.familyMember.family },
     });
   };
 
@@ -79,7 +55,7 @@ export default function FamilyNewScreen() {
       ]}
     >
       <TopNavigation
-        title="New Family"
+        title="Join Family"
         alignment="center"
         accessoryLeft={renderMenuActions}
       />
@@ -87,10 +63,14 @@ export default function FamilyNewScreen() {
       <Layout style={styles.layout}>
         <View style={styles.container}>
           <View style={styles.input}>
-            <Input placeholder="Name" value={name} onChangeText={setName} />
+            <Input
+              placeholder="Code"
+              value={familyId}
+              onChangeText={setFamilyId}
+            />
             <Text category="p2" appearance="hint" style={styles.text}>
-              Something like &quot;Smiths&quot;, &quot;Kevin&apos;s Cool
-              Kids&quot;, etc.
+              A series of random digits in the format
+              00000000-0000-0000-0000-000000000000.
             </Text>
           </View>
           <Button onPress={handleSubmit}>Create</Button>
