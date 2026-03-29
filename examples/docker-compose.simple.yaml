@@ -1,0 +1,21 @@
+services:
+  tribetracker:
+    image: tribe-tracker:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:80"
+    environment:
+      SIGNING_KEY_FILE: /run/secrets/signing_key
+    volumes:
+      - tribetrackerdata:/var/lib/tribetracker
+    secrets:
+      - signing_key
+
+volumes:
+  tribetrackerdata:
+
+secrets:
+  signing_key:
+    file: ./signingkey.txt
