@@ -29,21 +29,23 @@ export default function FamilyJoinScreen() {
   const handleSubmit = async (familyId: string) => {
     setIsSubmitting(true);
 
-    const joinRes = await api.joinFamily(familyId);
-    if (!joinRes.ok) {
+    try {
+      const joinRes = await api.joinFamily(familyId);
+      if (!joinRes.ok) {
+        toast.danger("Failed to join family: " + joinRes.error.message);
+        return;
+      }
+
+      await resetSync();
+      await sync();
+
+      router.replace({
+        pathname: "/familydetail",
+        params: { familyId: joinRes.familyMember.family },
+      });
+    } finally {
       setIsSubmitting(false);
-      toast.danger("Failed to join family: " + joinRes.error.message);
-      return;
     }
-
-    await resetSync();
-    await sync();
-
-    setIsSubmitting(false);
-    router.replace({
-      pathname: "/familydetail",
-      params: { familyId: joinRes.familyMember.family },
-    });
   };
 
   const renderMenuActions = useCallback(

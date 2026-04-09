@@ -35,6 +35,7 @@ export default function ProfileEditScreen() {
   const [avatar, setAvatar] = useState<string | undefined>();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const query = useLiveQuery(async () => {
     const userId = await SecureStore.getItemAsync("MY_USER_ID");
@@ -70,46 +71,52 @@ export default function ProfileEditScreen() {
   };
 
   const handleSubmit = async () => {
-    if (query.isLoading) {
-      toast.danger("User not yet loading. Try again in a few seconds.");
-      return;
-    }
+    setIsSubmitting(true);
 
-    const myUserId = await SecureStore.getItemAsync("MY_USER_ID");
-    if (!myUserId) {
-      toast.danger("Failed to get user ID.");
-      return;
-    }
-
-    let avatarUri = undefined;
-    if (avatar) {
-      const uploadRes = await api.uploadMedia(avatar);
-      if (!uploadRes.ok) {
-        toast.danger("Failed to upload image: " + uploadRes.error.message);
+    try {
+      if (query.isLoading) {
+        toast.danger("User not yet loading. Try again in a few seconds.");
         return;
       }
 
-      avatarUri = uploadRes.url;
+      const myUserId = await SecureStore.getItemAsync("MY_USER_ID");
+      if (!myUserId) {
+        toast.danger("Failed to get user ID.");
+        return;
+      }
+
+      let avatarUri = undefined;
+      if (avatar) {
+        const uploadRes = await api.uploadMedia(avatar);
+        if (!uploadRes.ok) {
+          toast.danger("Failed to upload image: " + uploadRes.error.message);
+          return;
+        }
+
+        avatarUri = uploadRes.url;
+      }
+
+      const res = await api.updateMe({
+        firstName: firstName.trim().toLowerCase(),
+        lastName: lastName.trim().toLowerCase(),
+        avatar: avatarUri,
+      });
+
+      if (!res.ok) {
+        toast.danger(res.error.message);
+        return;
+      }
+
+      const { success } = await updateUser(myUserId, res.user);
+      if (!success) {
+        toast.danger("Failed to update local user. Please re-sync.");
+        return;
+      }
+
+      router.back();
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const res = await api.updateMe({
-      firstName: firstName.trim().toLowerCase(),
-      lastName: lastName.trim().toLowerCase(),
-      avatar: avatarUri,
-    });
-
-    if (!res.ok) {
-      toast.danger(res.error.message);
-      return;
-    }
-
-    const { success } = await updateUser(myUserId, res.user);
-    if (!success) {
-      toast.danger("Failed to update local user. Please re-sync.");
-      return;
-    }
-
-    router.back();
   };
 
   const renderBackAction = () => (
@@ -191,7 +198,11 @@ export default function ProfileEditScreen() {
               />
             </View>
           </View>
-          <Button style={styles.button} onPress={handleSubmit}>
+          <Button
+            disabled={isSubmitting}
+            style={styles.button}
+            onPress={handleSubmit}
+          >
             Save
           </Button>
         </View>

@@ -23,45 +23,52 @@ export default function FamilyNewScreen() {
   const theme = useTheme();
   const toast = useToast();
   const [name, setName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    const familyRes = await api.createFamily(name);
-    if (!familyRes.ok) {
-      toast.danger(familyRes.error.message);
-      return;
+    setIsSubmitting(true);
+
+    try {
+      const familyRes = await api.createFamily(name);
+      if (!familyRes.ok) {
+        toast.danger(familyRes.error.message);
+        return;
+      }
+
+      const joinRes = await api.joinFamily(familyRes.family.id);
+      if (!joinRes.ok) {
+        toast.danger("Failed to join family: " + joinRes.error.message);
+        return;
+      }
+
+      const family = familyRes.family;
+      const familyMember = joinRes.familyMember;
+
+      const created = await createFamily({
+        ...family,
+        createdAt: new Date(family.createdAt),
+        updatedAt: new Date(family.updatedAt),
+      });
+      if (!created.success) {
+        toast.danger(created.error.message);
+        return;
+      }
+
+      const { success } = await createFamilyMember({
+        ...familyMember,
+        createdAt: new Date(familyMember.createdAt),
+      });
+      if (!success) {
+        toast.danger("Failed to create local family member.");
+      }
+
+      router.replace({
+        pathname: "/familydetail",
+        params: { familyId: created.family.id },
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    const joinRes = await api.joinFamily(familyRes.family.id);
-    if (!joinRes.ok) {
-      toast.danger("Failed to join family: " + joinRes.error.message);
-      return;
-    }
-
-    const family = familyRes.family;
-    const familyMember = joinRes.familyMember;
-
-    const created = await createFamily({
-      ...family,
-      createdAt: new Date(family.createdAt),
-      updatedAt: new Date(family.updatedAt),
-    });
-    if (!created.success) {
-      toast.danger(created.error.message);
-      return;
-    }
-
-    const { success } = await createFamilyMember({
-      ...familyMember,
-      createdAt: new Date(familyMember.createdAt),
-    });
-    if (!success) {
-      toast.danger("Failed to create local family member.");
-    }
-
-    router.replace({
-      pathname: "/familydetail",
-      params: { familyId: created.family.id },
-    });
   };
 
   const renderMenuActions = useCallback(
@@ -93,7 +100,9 @@ export default function FamilyNewScreen() {
               Kids&quot;, etc.
             </Text>
           </View>
-          <Button onPress={handleSubmit}>Create</Button>
+          <Button disabled={isSubmitting} onPress={handleSubmit}>
+            Create
+          </Button>
         </View>
       </Layout>
     </SafeAreaView>
