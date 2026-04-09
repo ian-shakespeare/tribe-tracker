@@ -12,6 +12,7 @@ type PlatformMapProps = {
   cameraPosition?: CameraPosition;
   onMarkerClick?: (id: string) => void;
   onMapClick?: () => void;
+  onZoom?: (zoom: number) => void;
 };
 
 export default function PlatformMap({
@@ -19,6 +20,7 @@ export default function PlatformMap({
   cameraPosition,
   onMarkerClick,
   onMapClick,
+  onZoom,
 }: PlatformMapProps) {
   if (Platform.OS === "ios") {
     return (
@@ -26,6 +28,7 @@ export default function PlatformMap({
         style={{ flex: 1 }}
         markers={markers}
         cameraPosition={cameraPosition}
+        onCameraMove={!onZoom ? undefined : ({ zoom }) => onZoom(zoom)}
         onMapClick={onMapClick}
         onMarkerClick={({ id }) => {
           if (id) {
@@ -40,6 +43,7 @@ export default function PlatformMap({
         style={{ flex: 1 }}
         markers={markers}
         cameraPosition={cameraPosition}
+        onCameraMove={!onZoom ? undefined : ({ zoom }) => onZoom(zoom)}
         onMapClick={onMapClick}
         onMarkerClick={({ id }) => {
           if (id) {

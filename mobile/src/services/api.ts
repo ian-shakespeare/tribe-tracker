@@ -53,9 +53,13 @@ class API {
       refreshToken: SecureStore.getItem(REFRESH_TOKEN) ?? "",
     };
 
-    const baseUrl = SecureStore.getItem("API_URL");
-    if (baseUrl) {
-      this.url = new URL(baseUrl);
+    try {
+      const baseUrl = SecureStore.getItem("API_URL");
+      if (baseUrl) {
+        this.url = new URL(baseUrl);
+      }
+    } catch {
+      // provided URL is invalid
     }
   }
 

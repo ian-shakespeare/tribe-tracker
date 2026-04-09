@@ -22,8 +22,11 @@ export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
+    setIsSubmitting(true);
+
     try {
       if (api.baseUrl?.href !== apiUrl) {
         const url = new URL(apiUrl);
@@ -73,6 +76,8 @@ export default function SignInScreen() {
       if (e instanceof Error) {
         toast.danger(e.message);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -134,7 +139,11 @@ export default function SignInScreen() {
             onChangeText={setConfirmPassword}
           />
         )}
-        <Button style={{ marginVertical: 4 }} onPress={handleSubmit}>
+        <Button
+          disabled={isSubmitting}
+          style={{ marginVertical: 4 }}
+          onPress={handleSubmit}
+        >
           Submit
         </Button>
         {(
