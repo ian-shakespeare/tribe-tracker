@@ -47,6 +47,7 @@ export default function QRScanner({ onScan }: QRScannerProps) {
         <CameraView
           barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
           onBarcodeScanned={({ data }) => onScan(data)}
+          style={[{ height: height * 0.2 }, styles.camera]}
         />
       ) : (
         <Pressable
@@ -73,6 +74,9 @@ export default function QRScanner({ onScan }: QRScannerProps) {
 
 const styles = StyleSheet.create({
   container: {
+    borderRadius: 8,
+  },
+  camera: {
     borderRadius: 8,
   },
   pressable: {
