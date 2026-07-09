@@ -6,6 +6,9 @@ import { Location } from "../models/locations";
 
 const UNAUTHORIZED = "unauthorized";
 const REFRESH_TOKEN = "REFRESH_TOKEN";
+const STORE_OPTIONS = {
+  keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK,
+};
 
 type Access = {
   accessToken: string;
@@ -47,19 +50,24 @@ class API {
   private url: URL | null = null;
 
   constructor() {
-    this.access = {
-      accessToken: "",
-      expiry: new Date(0),
-      refreshToken: SecureStore.getItem(REFRESH_TOKEN) ?? "",
-    };
-
     try {
-      const baseUrl = SecureStore.getItem("API_URL");
+      this.access = {
+        accessToken: "",
+        expiry: new Date(0),
+        refreshToken: SecureStore.getItem(REFRESH_TOKEN, STORE_OPTIONS) ?? "",
+      };
+
+      const baseUrl = SecureStore.getItem("API_URL", STORE_OPTIONS);
       if (baseUrl) {
         this.url = new URL(baseUrl);
       }
     } catch {
       // provided URL is invalid
+      this.access = {
+        accessToken: "",
+        expiry: new Date(0),
+        refreshToken: "",
+      };
     }
   }
 
@@ -69,7 +77,7 @@ class API {
 
   set baseUrl(url: URL) {
     this.url = url;
-    SecureStore.setItem("API_URL", url.href);
+    SecureStore.setItem("API_URL", url.href, STORE_OPTIONS);
   }
 
   get isAuthenticated(): boolean {
@@ -77,7 +85,7 @@ class API {
   }
 
   signOut() {
-    SecureStore.setItem(REFRESH_TOKEN, "");
+    SecureStore.setItem(REFRESH_TOKEN, "", STORE_OPTIONS);
     this.access.accessToken = "";
     this.access.expiry = new Date(0);
     this.access.refreshToken = "";
@@ -111,7 +119,7 @@ class API {
       return res;
     }
 
-    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken);
+    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken, STORE_OPTIONS);
     this.access.accessToken = res.data.accessToken;
     this.access.refreshToken = res.data.refreshToken;
     this.access.expiry = new Date(res.data.expiry);
@@ -137,7 +145,7 @@ class API {
       return res;
     }
 
-    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken);
+    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken, STORE_OPTIONS);
     this.access.accessToken = res.data.accessToken;
     this.access.refreshToken = res.data.refreshToken;
     this.access.expiry = new Date(res.data.expiry);
@@ -157,7 +165,7 @@ class API {
       return res;
     }
 
-    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken);
+    SecureStore.setItem(REFRESH_TOKEN, res.data.refreshToken, STORE_OPTIONS);
     this.access.accessToken = res.data.accessToken;
     this.access.refreshToken = res.data.refreshToken;
     this.access.expiry = new Date(res.data.expiry);
