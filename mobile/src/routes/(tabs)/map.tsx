@@ -1,6 +1,6 @@
 import PlatformMap from "../../views/components/PlatformMap";
 import { useLiveQuery } from "../../db/liveQuery";
-import { getUserLocations } from "../../models/user";
+import { getUserLocations } from "../../db/users";
 import { toTitleCase } from "../../utils/strings";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet } from "react-native";

@@ -12,7 +12,7 @@ import BackArrowIcon from "../views/components/BackArrowIcon";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { useLiveQuery } from "../db/liveQuery";
-import { getFamily } from "../models/family";
+import { getFamily } from "../db/families";
 import QRCode from "react-native-qrcode-svg";
 import * as Clipboard from "expo-clipboard";
 import CopyIcon from "../views/components/CopyIcon";

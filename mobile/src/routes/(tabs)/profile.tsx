@@ -14,7 +14,7 @@ import { useToast } from "../../views/contexts/Toast";
 import AvatarHero from "../../views/components/AvatarHero";
 import PencilIcon from "../../views/components/PencilIcon";
 import { useLiveQuery } from "../../db/liveQuery";
-import { getUser } from "../../models/user";
+import { getUser } from "../../db/users";
 import * as SecureStore from "expo-secure-store";
 import api from "../../services/api";
 import { formatDate } from "../../utils/strings";

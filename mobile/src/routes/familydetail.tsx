@@ -13,11 +13,8 @@ import BackArrowIcon from "../views/components/BackArrowIcon";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { useLiveQuery } from "../db/liveQuery";
-import {
-  FamilyMemberUser,
-  getFamily,
-  getFamilyMembers,
-} from "../models/family";
+import type { FamilyMemberUser } from "../models/family";
+import { getFamily, getFamilyMembers } from "../db/families";
 import { formatDate, toTitleCase } from "../utils/strings";
 import PersonAddIcon from "../views/components/PersonAddIcon";
 

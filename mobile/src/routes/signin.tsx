@@ -5,7 +5,7 @@ import SecureInput from "../views/components/SecureInput";
 import api from "../services/api";
 import { useRouter } from "expo-router";
 import { useToast } from "../views/contexts/Toast";
-import { upsertUser } from "../models/user";
+import { upsertUser } from "../db/users";
 import * as SecureStore from "expo-secure-store";
 import { useSync } from "../views/contexts/Sync";
 

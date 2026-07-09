@@ -14,8 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import BackArrowIcon from "../views/components/BackArrowIcon";
 import { useRouter } from "expo-router";
 import { useToast } from "../views/contexts/Toast";
-import { createFamily } from "../models/family";
-import { createFamilyMember } from "../models/familyMember";
+import { createFamily } from "../db/families";
+import { createFamilyMember } from "../db/familyMembers";
 import api from "../services/api";
 
 export default function FamilyNewScreen() {

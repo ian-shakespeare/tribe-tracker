@@ -1,4 +1,4 @@
-import DB from "../db";
+import DB from "./index";
 
 export async function getDatabaseSize(): Promise<
   { success: true; size: number } | { success: false; error: Error }
