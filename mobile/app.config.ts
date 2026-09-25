@@ -4,7 +4,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   name: "Tribe Tracker",
   slug: "tribe-tracker",
-  version: "1.0.1",
+  version: "1.1.0",
   orientation: "portrait",
   userInterfaceStyle: "dark",
   scheme: "tribetracker",
