@@ -8,10 +8,10 @@ import {
 import * as SecureStore from "expo-secure-store";
 import api, { ApiFamily, ApiUser } from "../../services/api";
 import * as Location from "expo-location";
-import { deleteUsers, upsertUsers } from "../../models/user";
-import { deleteFamilies, upsertFamilies } from "../../models/family";
-import { upsertLocations } from "../../models/locations";
-import { upsertFamilyMembers } from "../../models/familyMember";
+import { deleteUsers, upsertUsers } from "../../db/users";
+import { deleteFamilies, upsertFamilies } from "../../db/families";
+import { upsertLocations } from "../../db/locations";
+import { upsertFamilyMembers } from "../../db/familyMembers";
 
 const SyncContext = createContext<{
   lastSyncedAt: Date;

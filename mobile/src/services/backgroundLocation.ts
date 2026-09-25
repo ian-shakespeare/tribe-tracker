@@ -5,24 +5,32 @@ import api from "../services/api";
 const TASK_NAME = "BACKGROUND_LOCATION_TASK";
 
 TaskManager.defineTask(TASK_NAME, async ({ data, error }) => {
-  if (error) {
-    return;
+  try {
+    if (error) {
+      return;
+    }
+
+    if (!api.baseUrl) {
+      return;
+    }
+
+    if (!api.isAuthenticated) {
+      return;
+    }
+
+    const { locations } = data as { locations: Location.LocationObject[] };
+    if (!locations || locations.length === 0) {
+      return;
+    }
+
+    // Use the most recent location from the batch
+    const latest = locations[locations.length - 1];
+    const { latitude, longitude } = latest.coords;
+
+    await api.createLocation(latitude, longitude);
+  } catch {
+    // TODO: log
   }
-
-  if (!api.isAuthenticated) {
-    return;
-  }
-
-  const { locations } = data as { locations: Location.LocationObject[] };
-  if (!locations || locations.length === 0) {
-    return;
-  }
-
-  // Use the most recent location from the batch
-  const latest = locations[locations.length - 1];
-  const { latitude, longitude } = latest.coords;
-
-  await api.createLocation(latitude, longitude);
 });
 
 export async function startBackgroundTracking(): Promise<boolean> {

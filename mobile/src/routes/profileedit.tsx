@@ -19,7 +19,7 @@ import { useToast } from "../views/contexts/Toast";
 import * as ImagePicker from "expo-image-picker";
 import BackArrowIcon from "../views/components/BackArrowIcon";
 import { Image } from "expo-image";
-import { getUser, updateUser } from "../models/user";
+import { getUser, updateUser } from "../db/users";
 import { useLiveQuery } from "../db/liveQuery";
 import * as SecureStore from "expo-secure-store";
 import api from "../services/api";

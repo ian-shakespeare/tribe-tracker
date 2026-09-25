@@ -27,6 +27,10 @@ export default function FamilyJoinScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (familyId: string) => {
+    if (isSubmitting) {
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

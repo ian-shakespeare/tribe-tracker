@@ -18,7 +18,8 @@ import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import PeopleIcon from "../../views/components/PeopleIcon";
 import { useLiveQuery } from "../../db/liveQuery";
-import { Family, getAllFamilies } from "../../models/family";
+import type { Family } from "../../models/family";
+import { getAllFamilies } from "../../db/families";
 import { toTitleCase } from "../../utils/strings";
 
 type ListItemProps = {
